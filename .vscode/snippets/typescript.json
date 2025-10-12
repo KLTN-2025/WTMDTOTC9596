@@ -1,0 +1,126 @@
+{
+  "React Functional Component": {
+    "prefix": "rfc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  $2",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ $3 }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <div>",
+      "      $4",
+      "    </div>",
+      "  )",
+      "}"
+    ],
+    "description": "Create a React functional component with TypeScript"
+  },
+  "React Functional Component with Children": {
+    "prefix": "rfcc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  children: React.ReactNode",
+      "  $2",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ children, $3 }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <div>",
+      "      {children}",
+      "    </div>",
+      "  )",
+      "}"
+    ],
+    "description": "Create a React functional component with children prop"
+  },
+  "React Hook": {
+    "prefix": "rhook",
+    "body": [
+      "import { useState, useEffect } from 'react'",
+      "",
+      "export function use${1:HookName}($2) {",
+      "  const [${3:state}, set${3/(.*)/${3:/capitalize}/}] = useState($4)",
+      "",
+      "  useEffect(() => {",
+      "    $5",
+      "  }, [$6])",
+      "",
+      "  return {",
+      "    ${3:state},",
+      "    set${3/(.*)/${3:/capitalize}/}",
+      "  }",
+      "}"
+    ],
+    "description": "Create a custom React hook"
+  },
+  "TypeScript Interface": {
+    "prefix": "tif",
+    "body": [
+      "interface ${1:InterfaceName} {",
+      "  $2",
+      "}"
+    ],
+    "description": "Create a TypeScript interface"
+  },
+  "TypeScript Type": {
+    "prefix": "ttype",
+    "body": [
+      "type ${1:TypeName} = $2"
+    ],
+    "description": "Create a TypeScript type"
+  },
+  "Async Function": {
+    "prefix": "async",
+    "body": [
+      "async function ${1:functionName}($2) {",
+      "  try {",
+      "    $3",
+      "  } catch (error) {",
+      "    console.error('Error:', error)",
+      "    throw error",
+      "  }",
+      "}"
+    ],
+    "description": "Create an async function with error handling"
+  },
+  "Console Log": {
+    "prefix": "clg",
+    "body": [
+      "console.log('${1:message}:', ${2:value})"
+    ],
+    "description": "Create a console.log statement"
+  },
+  "Import Statement": {
+    "prefix": "imp",
+    "body": [
+      "import { ${1:module} } from '${2:package}'"
+    ],
+    "description": "Create an import statement"
+  },
+  "Import Default": {
+    "prefix": "impd",
+    "body": [
+      "import ${1:module} from '${2:package}'"
+    ],
+    "description": "Create a default import statement"
+  },
+  "Export Statement": {
+    "prefix": "exp",
+    "body": [
+      "export { ${1:module} }"
+    ],
+    "description": "Create an export statement"
+  },
+  "Export Default": {
+    "prefix": "expd",
+    "body": [
+      "export default ${1:module}"
+    ],
+    "description": "Create a default export statement"
+  }
+}

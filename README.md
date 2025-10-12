@@ -1,73 +1,178 @@
-# React + TypeScript + Vite
+# React 2025 App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React application built with TypeScript, Vite, and best practices for 2025.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ⚡ **Vite** - Lightning fast build tool
+- ⚛️ **React 19** - Latest React with concurrent features
+- 🔷 **TypeScript** - Type safety and better developer experience
+- 🎨 **ESLint + Prettier** - Code quality and formatting
+- 🛠️ **Path Aliases** - Clean imports with `@/` prefix
+- 🎯 **Modern Tooling** - Latest development tools and configurations
 
-## React Compiler
+## 📁 Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── components/          # Reusable UI components
+│   ├── common/         # Common components
+│   ├── forms/          # Form components
+│   ├── layout/         # Layout components
+│   └── ui/             # Base UI components
+├── hooks/              # Custom React hooks
+├── utils/              # Utility functions
+├── types/              # TypeScript type definitions
+├── contexts/           # React contexts
+├── services/           # API services
+├── constants/          # App constants
+├── assets/             # Static assets
+│   ├── images/         # Image files
+│   └── icons/          # Icon files
+├── styles/             # Global styles
+└── pages/              # Page components
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Development Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+
+- npm, yarn, or pnpm
+
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd react-2025-app
 ```
+
+2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+3. Copy environment variables
+
+```bash
+cp env.example .env
+```
+
+4. Start development server
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+## 📜 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint errors
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
+- `npm run type-check` - Run TypeScript type checking
+
+## 🎯 Path Aliases
+
+The project uses path aliases for cleaner imports:
+
+```typescript
+// Instead of
+import { Button } from '../../../components/ui/Button'
+
+// Use
+import { Button } from '@/components/ui/Button'
+```
+
+Available aliases:
+
+- `@/*` → `src/*`
+- `@/components/*` → `src/components/*`
+- `@/hooks/*` → `src/hooks/*`
+- `@/utils/*` → `src/utils/*`
+- `@/types/*` → `src/types/*`
+- `@/contexts/*` → `src/contexts/*`
+- `@/services/*` → `src/services/*`
+- `@/constants/*` → `src/constants/*`
+- `@/assets/*` → `src/assets/*`
+- `@/styles/*` → `src/styles/*`
+- `@/pages/*` → `src/pages/*`
+
+## 🔧 Configuration
+
+### ESLint
+
+The project uses ESLint with:
+
+- TypeScript support
+- React rules
+- Accessibility rules
+- Import organization
+- Prettier integration
+
+### Prettier
+
+Code formatting with:
+
+- Single quotes
+- No semicolons
+- 2-space indentation
+- 100 character line length
+
+### VSCode
+
+Recommended extensions and settings are included in `.vscode/`:
+
+- Auto-formatting on save
+- ESLint integration
+- TypeScript support
+- Code snippets
+- Debugging configuration
+
+## 🚀 Deployment
+
+### Build
+
+```bash
+npm run build
+```
+
+### Preview
+
+```bash
+npm run preview
+```
+
+## 📝 Code Style
+
+- Use TypeScript for all new files
+- Follow ESLint rules
+- Use Prettier for formatting
+- Write meaningful commit messages
+- Use conventional commits format
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
