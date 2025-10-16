@@ -1,13 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --transition-duration: 0.7s;
-  --color-primary: #224773;
+  --color-primary: #204ed3;
   --color-primary-light: #4086d9;
-  --color-secondary: #ffbd59;
+  --color-secondary: #04113e;
   --color-orange-dark: #c8440c;
   --color-orange-light: #efd097;
   --color-text: #fafafa;
+  --default-font-family: 'Quicksand', sans-serif;
 }
 
 @layer base {

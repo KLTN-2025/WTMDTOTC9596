@@ -24,7 +24,6 @@
   "editor.wordBasedSuggestions": "off",
   "editor.parameterHints.enabled": true,
   "editor.hover.delay": 300,
-  "editor.lightbulb.enabled": true,
   "editor.linkedEditing": true,
   "editor.smoothScrolling": true,
   "editor.cursorBlinking": "smooth",
