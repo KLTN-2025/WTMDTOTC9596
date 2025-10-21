@@ -1,9 +1,21 @@
-import { cn } from '@/utils'
+import Slider from 'react-slick'
+import { home } from '../../constants'
 
-export const Banner = ({ image, className }: { image: string; className?: string }) => {
+export const Banner = () => {
+  let settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1
+  }
   return (
-    <div className={cn('w-full h-full object-cover', className)}>
-      <img src={image} alt='banner' />
-    </div>
+    <Slider {...settings}>
+      {home.banner_image.map((image, index) => (
+        <div key={index}>
+          <img src={image} alt={`Banner ${index + 1}`} />
+        </div>
+      ))}
+    </Slider>
   )
 }
