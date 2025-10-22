@@ -27,7 +27,9 @@ export const Header = () => {
             <a href='/'>
               <img src={logo} alt='logo' className='lg:max-w-50 md:max-w-40 max-w-30' />
             </a>
-            <h2 className='md:text-lg font-bold lg:text-2xl max-md:hidden'>{home.slogan}</h2>
+            <h2 className='md:text-lg font-bold lg:text-2xl max-md:hidden text-white'>
+              {home.slogan}
+            </h2>
             <button className='lg:px-5 md:px-3 md:py-3 p-1.5 rounded-lg bg-white flex items-center gap-2 cursor-pointer hover:bg-secondary hover:text-white transition-all duration-300 text-secondary'>
               <CircleUserRound />
               <span className='font-bold max-md:hidden'>Đăng nhập</span>

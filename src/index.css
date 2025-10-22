@@ -13,16 +13,24 @@
 
 @layer base {
   html {
-    @apply scroll-smooth scroll-pt-5 lg:scroll-pt-10;
+    @apply scroll-smooth scroll-pt-5 lg:scroll-pt-10 bg-slate-50;
   }
 
   body {
-    @apply text-neutral-50;
+    @apply text-secondary;
   }
 }
 
 @layer utilities {
   .inner {
     @apply mx-auto max-w-[1140px] px-5 2xl:max-w-[1240px];
+  }
+
+  .l-section {
+    @apply py-5;
+  }
+
+  .wapper-card {
+    @apply bg-white p-6 rounded-2xl;
   }
 }

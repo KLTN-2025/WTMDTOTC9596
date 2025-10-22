@@ -1,11 +1,18 @@
-import { Banner } from '@/lib/components/common'
+import { Banner, Filter } from '@/lib/components/common'
 
 export const Home = () => {
   return (
-    <div className='my-10'>
-      <div className='inner'>
-        <Banner />
-      </div>
+    <div>
+      <section id='banner' className='l-section'>
+        <div className='inner'>
+          <Banner />
+        </div>
+      </section>
+      <section id='filter-product' className='l-section'>
+        <div className='inner'>
+          <Filter />
+        </div>
+      </section>
     </div>
   )
 }
