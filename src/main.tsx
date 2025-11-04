@@ -1,18 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.tsx'
-import './index.css'
-import { Footer, Header } from './lib/components/layout'
+import '@/styles/index.css'
+import { Provider } from '@/components/ui/provider'
+import { RouterProvider } from 'react-router/dom'
+import { router } from './router'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <div className='flex flex-col justify-between min-h-screen'>
-        <Header />
-        <App />
-        <Footer />
-      </div>
-    </BrowserRouter>
+    <Provider>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 )
