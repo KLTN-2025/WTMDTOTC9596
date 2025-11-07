@@ -9,8 +9,8 @@ export default defineConfig({
     react({
       jsxRuntime: 'automatic'
     }),
-    tsconfigPaths(),
-    tailwindcss()
+    tailwindcss(),
+    tsconfigPaths()
   ],
   resolve: {
     alias: {
@@ -24,7 +24,8 @@ export default defineConfig({
       '@/constants': path.resolve(__dirname, './src/constants'),
       '@/assets': path.resolve(__dirname, './src/assets'),
       '@/styles': path.resolve(__dirname, './src/styles'),
-      '@/pages': path.resolve(__dirname, './src/pages')
+      '@/pages': path.resolve(__dirname, './src/pages'),
+      '@/configs': path.resolve(__dirname, './src/configs')
     }
   },
   server: {

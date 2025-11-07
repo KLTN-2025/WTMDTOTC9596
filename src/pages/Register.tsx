@@ -4,25 +4,23 @@ import {
   Checkbox,
   Field,
   Flex,
-  HStack,
   Image,
   Input,
   Link,
-  NativeSelect,
   Stack,
   Text,
   VStack
 } from '@chakra-ui/react'
+import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { Link as RouterLink } from 'react-router'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import { PasswordInput } from '@/components/ui/password-input'
+import { toaster } from '@/components/ui/toaster'
+import { register } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
-import { HiOutlineDocumentText } from 'react-icons/hi2'
-import { HiOutlineInformationCircle } from 'react-icons/hi2'
-import { HiOutlineReceiptRefund } from 'react-icons/hi2'
-import { HiOutlineCreditCard } from 'react-icons/hi2'
-import { Icon } from '@chakra-ui/react'
 import banner from '@/assets/images/banner.png'
+import { SellCarSection } from '@/components/shared/SellCarSection'
+
 interface RegisterFormData {
   fullName: string
   phone: string
@@ -31,8 +29,10 @@ interface RegisterFormData {
 }
 
 export function Register() {
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
   const {
-    register,
+    register: registerField,
     handleSubmit,
     formState: { errors },
     control
@@ -42,9 +42,37 @@ export function Register() {
     }
   })
 
-  const onSubmit = (data: RegisterFormData) => {
-    console.log('Register data:', data)
-    // Mock register logic here
+  const onSubmit = async (formData: RegisterFormData) => {
+    setIsLoading(true)
+    try {
+      const { data: authData, error } = await register(formData)
+
+      if (error) {
+        toaster.create({
+          title: 'Đăng ký thất bại',
+          description: error.message || 'Đã xảy ra lỗi khi đăng ký',
+          type: 'error'
+        })
+        return
+      }
+
+      if (authData?.user) {
+        toaster.create({
+          title: 'Đăng ký thành công',
+          description: 'Tài khoản của bạn đã được tạo thành công',
+          type: 'success'
+        })
+        navigate('/login')
+      }
+    } catch (error) {
+      toaster.create({
+        title: 'Lỗi đăng ký',
+        description: 'Đã xảy ra lỗi, vui lòng thử lại',
+        type: 'error'
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -109,7 +137,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...register('fullName', {
+                      {...registerField('fullName', {
                         required: 'Họ và tên là bắt buộc',
                         minLength: {
                           value: 2,
@@ -132,7 +160,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...register('phone', {
+                      {...registerField('phone', {
                         required: 'Số điện thoại là bắt buộc',
                         pattern: {
                           value: /^[0-9]{10,11}$/,
@@ -153,7 +181,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...register('password', {
+                      {...registerField('password', {
                         required: 'Mật khẩu là bắt buộc',
                         minLength: {
                           value: 6,
@@ -219,6 +247,8 @@ export function Register() {
                     fontWeight='600'
                     fontSize='sm'
                     _hover={{ bg: '#1a3fb0' }}
+                    disabled={isLoading}
+                    loading={isLoading}
                   >
                     Đăng ký
                   </Button>
@@ -254,114 +284,7 @@ export function Register() {
           />
         </Flex>
 
-        {/* Sell Car Section */}
-        <Box bg='white' borderRadius='12px' p={6} boxShadow='0px 4px 4px rgba(0, 0, 0, 0.25)'>
-          <VStack align='stretch' gap={5}>
-            <Text fontSize='xl' fontWeight='700' color='#04113E'>
-              Tôi muốn bán xe
-            </Text>
-
-            <Flex gap={5} direction={{ base: 'column', lg: 'row' }}>
-              {/* Form Section */}
-              <VStack flex={1} align='stretch' gap={5}>
-                <Field.Root>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      placeholder='Chọn hãng xe...'
-                      bg='white'
-                      borderColor='#E5E5E5'
-                      borderRadius='8px'
-                      px={4}
-                      py={2}
-                      fontSize='md'
-                      color='#737373'
-                    >
-                      <option value=''>Chọn hãng xe...</option>
-                      <option value='toyota'>Toyota</option>
-                      <option value='honda'>Honda</option>
-                      <option value='ford'>Ford</option>
-                      <option value='mazda'>Mazda</option>
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
-                </Field.Root>
-
-                <Field.Root>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      placeholder='Chọn dòng xe...'
-                      bg='#F5F5F5'
-                      borderColor='#E5E5E5'
-                      borderRadius='8px'
-                      px={4}
-                      py={2}
-                      fontSize='md'
-                      color='#737373'
-                    >
-                      <option value=''>Chọn dòng xe...</option>
-                      <option value='sedan'>Sedan</option>
-                      <option value='suv'>SUV</option>
-                      <option value='hatchback'>Hatchback</option>
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
-                </Field.Root>
-
-                <Button
-                  w='full'
-                  bg='#204ED3'
-                  color='white'
-                  borderRadius='6px'
-                  py={3}
-                  fontWeight='600'
-                  fontSize='sm'
-                  _hover={{ bg: '#1a3fb0' }}
-                >
-                  Gửi thông tin
-                </Button>
-
-                <Text fontSize='sm' color='#204ED3' textAlign='center'>
-                  Để tiếp tục, tôi đồng ý với Quy định & chính sách và Quy chế hoạt động
-                </Text>
-              </VStack>
-
-              {/* Process Steps */}
-              <Box flex={1} bg='#F5F5F5' borderRadius='12px' p={10}>
-                <VStack align='stretch' gap={5}>
-                  <Text fontSize='md' fontWeight='600' color='#04113E' textAlign='center'>
-                    Quy trình 4 bước
-                  </Text>
-
-                  <VStack align='stretch' gap={4}>
-                    {[
-                      { icon: HiOutlineDocumentText, text: 'Gửi thông tin' },
-                      { icon: HiOutlineInformationCircle, text: 'Nhận báo giá' },
-                      { icon: HiOutlineReceiptRefund, text: 'Nhận cọc' },
-                      { icon: HiOutlineCreditCard, text: 'Thanh toán' }
-                    ].map((step, index) => (
-                      <HStack
-                        key={index}
-                        bg='white'
-                        borderRadius='12px'
-                        p={2}
-                        gap={2}
-                        align='center'
-                      >
-                        <Icon size='md' color='#04113E'>
-                          <step.icon />
-                        </Icon>
-                        <Text fontSize='sm' color='#04113E'>
-                          {step.text}
-                        </Text>
-                      </HStack>
-                    ))}
-                  </VStack>
-                </VStack>
-              </Box>
-            </Flex>
-          </VStack>
-        </Box>
-
+        <SellCarSection />
         {/* Banner Section */}
         <Box width='full' height='150px' bg='gray.200' borderRadius='6px' overflow='hidden'>
           <Image src={banner} alt='Banner' width='100%' height='100%' objectFit='cover' />

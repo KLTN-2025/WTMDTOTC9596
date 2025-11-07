@@ -1,13 +1,66 @@
-import { Box, Button, Flex, HStack, Icon, Image, Link, Text } from '@chakra-ui/react'
-import { useState } from 'react'
-import { Link as RouterLink } from 'react-router'
+import { Box, Button, Flex, HStack, Icon, Image, Link, Menu, Portal, Text } from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import { FaUser } from 'react-icons/fa'
 import { HiBars3, HiOutlineHeart } from 'react-icons/hi2'
 import { IoCarSportOutline, IoStorefrontOutline } from 'react-icons/io5'
+import { FiSettings, FiLogOut } from 'react-icons/fi'
+import { supabase } from '@/configs/supabase'
+import { logout } from '@/api/auth'
+import { toaster } from '@/components/ui/toaster'
 import logo from '@/assets/images/logo.png'
 
 export function Header() {
-  const [isLoggedIn] = useState(false)
+  const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession()
+      setIsLoggedIn(!!session)
+    }
+
+    checkSession()
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await logout()
+      if (error) {
+        toaster.create({
+          title: 'Đăng xuất thất bại',
+          description: error.message || 'Đã xảy ra lỗi khi đăng xuất',
+          type: 'error'
+        })
+        return
+      }
+
+      toaster.create({
+        title: 'Đăng xuất thành công',
+        description: 'Bạn đã đăng xuất khỏi tài khoản',
+        type: 'success'
+      })
+      navigate('/')
+    } catch (error) {
+      toaster.create({
+        title: 'Lỗi đăng xuất',
+        description: 'Đã xảy ra lỗi, vui lòng thử lại',
+        type: 'error'
+      })
+    }
+  }
   return (
     <>
       {/* Top Header */}
@@ -71,24 +124,44 @@ export function Header() {
                     Bán xe
                   </Button>
                 </RouterLink>
-                <RouterLink to='/account'>
-                  <Button
-                    variant='outline'
-                    colorPalette='blue'
-                    borderColor='white'
-                    color='white'
-                    size='sm'
-                    borderRadius='6px'
-                    px={5}
-                    py={3}
-                    display='flex'
-                    alignItems='center'
-                    gap={2}
-                  >
-                    <FaUser />
-                    Tài khoản
-                  </Button>
-                </RouterLink>
+                <Menu.Root positioning={{ placement: 'bottom-end' }}>
+                  <Menu.Trigger asChild>
+                    <Button
+                      variant='outline'
+                      colorPalette='blue'
+                      borderColor='white'
+                      color='white'
+                      size='sm'
+                      borderRadius='6px'
+                      px={5}
+                      py={3}
+                      display='flex'
+                      alignItems='center'
+                      gap={2}
+                    >
+                      <FaUser />
+                      Tài khoản
+                    </Button>
+                  </Menu.Trigger>
+                  <Portal>
+                    <Menu.Positioner>
+                      <Menu.Content minW='200px'>
+                        <Menu.Item value='settings' onClick={() => navigate('/settings/profile')}>
+                          <Icon>
+                            <FiSettings />
+                          </Icon>
+                          Settings
+                        </Menu.Item>
+                        <Menu.Item value='logout' onClick={handleLogout}>
+                          <Icon>
+                            <FiLogOut />
+                          </Icon>
+                          Đăng xuất
+                        </Menu.Item>
+                      </Menu.Content>
+                    </Menu.Positioner>
+                  </Portal>
+                </Menu.Root>
               </>
             )}
           </HStack>
@@ -118,7 +191,9 @@ export function Header() {
             fontSize='sm'
             _hover={{ bg: '#1a3fb0' }}
           >
-            <HiBars3 size='md' />
+            <Icon size='md'>
+              <HiBars3 />
+            </Icon>
             DANH MỤC
           </Button>
 
