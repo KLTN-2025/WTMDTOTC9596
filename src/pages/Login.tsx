@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link as RouterLink, useNavigate } from 'react-router'
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router'
 import { FaFacebook, FaGoogle } from 'react-icons/fa'
 import { PasswordInput } from '@/components/ui/password-input'
 import { toaster } from '@/components/ui/toaster'
@@ -29,6 +29,7 @@ interface LoginFormData {
 
 export function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
   const {
     register,
@@ -56,7 +57,8 @@ export function Login() {
           description: 'Chào mừng bạn quay trở lại',
           type: 'success'
         })
-        navigate('/')
+        const from = (location.state as { from?: Location })?.from?.pathname || '/'
+        navigate(from, { replace: true })
       }
     } catch (error) {
       toaster.create({

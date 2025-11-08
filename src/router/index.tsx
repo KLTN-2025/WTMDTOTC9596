@@ -1,28 +1,57 @@
 import { createBrowserRouter } from 'react-router'
+import type { RouteObject } from 'react-router'
 import { Layout } from '@/components/layout/Layout'
-import { Login, Register, ForgotPassword, Home } from '@/pages'
+import {
+  Login,
+  Register,
+  ForgotPassword,
+  Home,
+  Products,
+  ProductDetail,
+  UsedCars,
+  SoldCars
+} from '@/pages'
+import { createGuardedRoute, routeGuards } from './guards'
 
-export const router = createBrowserRouter([
+const routes: RouteObject[] = [
   {
     path: '/',
     element: <Layout />,
     children: [
       {
         index: true,
-        element: <Home />
+        element: createGuardedRoute(<Home />, routeGuards.public)
       },
       {
         path: 'login',
-        element: <Login />
+        element: createGuardedRoute(<Login />, routeGuards.guest)
       },
       {
         path: 'register',
-        element: <Register />
+        element: createGuardedRoute(<Register />, routeGuards.guest)
       },
       {
         path: 'forgot-password',
-        element: <ForgotPassword />
+        element: createGuardedRoute(<ForgotPassword />, routeGuards.guest)
+      },
+      {
+        path: 'products',
+        element: createGuardedRoute(<Products />, routeGuards.public)
+      },
+      {
+        path: 'used-cars',
+        element: createGuardedRoute(<UsedCars />, routeGuards.public)
+      },
+      {
+        path: 'sold-cars',
+        element: createGuardedRoute(<SoldCars />, routeGuards.public)
+      },
+      {
+        path: 'products/:id',
+        element: createGuardedRoute(<ProductDetail />, routeGuards.public)
       }
     ]
   }
-])
+]
+
+export const router = createBrowserRouter(routes)
