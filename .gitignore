@@ -124,3 +124,5 @@ pnpm-lock.yaml
 *.min.css
 
 .vscode
+.vercel
+supabase
