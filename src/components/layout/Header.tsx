@@ -179,23 +179,86 @@ export function Header() {
           gap={8}
         >
           {/* Danh mục Button */}
-          <Button
-            bg='#204ED3'
-            color='white'
-            borderRadius='6px'
-            px={4}
-            py={2}
-            height='38px'
-            gap={2}
-            fontWeight='700'
-            fontSize='sm'
-            _hover={{ bg: '#1a3fb0' }}
-          >
-            <Icon size='md'>
-              <HiBars3 />
-            </Icon>
-            DANH MỤC
-          </Button>
+          <Menu.Root positioning={{ placement: 'bottom-start' }}>
+            <Menu.Trigger asChild>
+              <Button
+                bg='#204ED3'
+                color='white'
+                borderRadius='6px'
+                px={4}
+                py={2}
+                height='38px'
+                gap={2}
+                fontWeight='700'
+                fontSize='sm'
+                _hover={{ bg: '#1a3fb0' }}
+              >
+                <Icon size='md'>
+                  <HiBars3 />
+                </Icon>
+                DANH MỤC
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content minW='260px' py={2} borderRadius='8px' boxShadow='lg'>
+                  <Menu.Item value='all-cars' onClick={() => navigate('/products')} py={3} px={4}>
+                    <Icon size='lg' color='#204ED3'>
+                      <IoCarSportOutline />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Tất cả các xe
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item value='used-cars' onClick={() => navigate('/used-cars')} py={3} px={4}>
+                    <Icon size='lg' color='#204ED3'>
+                      <IoCarSportOutline />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Xe cũ
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item
+                    value='new-cars'
+                    onClick={() => navigate('/products?status=new')}
+                    py={3}
+                    px={4}
+                  >
+                    <Icon size='lg' color='#204ED3'>
+                      <IoCarSportOutline />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Xe mới
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item value='sold-cars' onClick={() => navigate('/sold-cars')} py={3} px={4}>
+                    <Icon size='lg' color='#204ED3'>
+                      <IoCarSportOutline />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Xe đã bán
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item value='stores' onClick={() => navigate('/stores')} py={3} px={4}>
+                    <Icon size='lg' color='#204ED3'>
+                      <IoStorefrontOutline />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Cửa hàng
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item value='favorites' onClick={() => navigate('/favorites')} py={3} px={4}>
+                    <Icon size='lg' color='#204ED3'>
+                      <HiOutlineHeart />
+                    </Icon>
+                    <Text fontSize='md' fontWeight='500'>
+                      Yêu thích
+                    </Text>
+                  </Menu.Item>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
 
           {/* Navigation Links */}
           <HStack gap={2}>

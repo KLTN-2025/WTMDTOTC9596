@@ -1,25 +1,34 @@
 import { Box, Button, Field, Flex, Image, Input, Link, Text, VStack } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link as RouterLink } from 'react-router'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toaster } from '@/components/ui/toaster'
 import { resetPassword } from '@/api/auth'
+import { PasswordInput } from '@/components/ui/password-input'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
-import { SellCarSection } from '@/components/shared/SellCarSection'
+import { SellCarSection } from '@/components/common/SellCarSection.tsx'
 
-const forgotPasswordSchema = z.object({
-  phone: z
-    .string()
-    .min(1, 'Số điện thoại là bắt buộc')
-    .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ')
-})
+const forgotPasswordSchema = z
+  .object({
+    phone: z
+      .string()
+      .min(1, 'Số điện thoại là bắt buộc')
+      .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ'),
+    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu')
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['confirmPassword']
+  })
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPassword() {
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const {
     register,
@@ -32,25 +41,29 @@ export function ForgotPassword() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true)
     try {
-      const { error } = await resetPassword(data.phone)
+      const { error } = await resetPassword(data.phone, data.password)
 
       if (error) {
         toaster.create({
-          title: 'Gửi mã xác thực thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi gửi mã xác thực',
+          title: 'Đặt lại mật khẩu thất bại',
+          description: error.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu',
           type: 'error'
         })
         return
       }
 
       toaster.create({
-        title: 'Gửi mã OTP thành công',
-        description: 'Vui lòng kiểm tra tin nhắn để nhận mã xác thực',
+        title: 'Đặt lại mật khẩu thành công',
+        description: 'Mật khẩu của bạn đã được cập nhật. Vui lòng đăng nhập lại.',
         type: 'success'
       })
+
+      setTimeout(() => {
+        navigate('/login')
+      }, 1500)
     } catch (error) {
       toaster.create({
-        title: 'Lỗi gửi mã xác thực',
+        title: 'Lỗi đặt lại mật khẩu',
         description: 'Đã xảy ra lỗi, vui lòng thử lại',
         type: 'error'
       })
@@ -105,7 +118,7 @@ export function ForgotPassword() {
               </Text>
 
               <Text fontSize='sm' color='#737373' mb={2}>
-                Nhập số điện thoại của bạn để nhận mã xác thực đặt lại mật khẩu
+                Nhập số điện thoại và mật khẩu mới để đặt lại mật khẩu
               </Text>
 
               <form onSubmit={handleSubmit(onSubmit)}>
@@ -125,6 +138,40 @@ export function ForgotPassword() {
                     {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
                   </Field.Root>
 
+                  <Field.Root invalid={!!errors.password}>
+                    <PasswordInput
+                      placeholder='Mật khẩu mới...'
+                      bg='white'
+                      borderColor='#E5E5E5'
+                      borderRadius='8px'
+                      px={4}
+                      py={2}
+                      fontSize='md'
+                      color='#737373'
+                      {...register('password')}
+                    />
+                    {errors.password && (
+                      <Field.ErrorText>{errors.password.message}</Field.ErrorText>
+                    )}
+                  </Field.Root>
+
+                  <Field.Root invalid={!!errors.confirmPassword}>
+                    <PasswordInput
+                      placeholder='Xác nhận mật khẩu...'
+                      bg='white'
+                      borderColor='#E5E5E5'
+                      borderRadius='8px'
+                      px={4}
+                      py={2}
+                      fontSize='md'
+                      color='#737373'
+                      {...register('confirmPassword')}
+                    />
+                    {errors.confirmPassword && (
+                      <Field.ErrorText>{errors.confirmPassword.message}</Field.ErrorText>
+                    )}
+                  </Field.Root>
+
                   <Button
                     type='submit'
                     w='full'
@@ -138,7 +185,7 @@ export function ForgotPassword() {
                     disabled={isLoading}
                     loading={isLoading}
                   >
-                    Gửi mã xác thực
+                    Đặt lại mật khẩu
                   </Button>
                 </VStack>
               </form>

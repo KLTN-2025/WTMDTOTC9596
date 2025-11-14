@@ -4,10 +4,21 @@ import '@/styles/index.css'
 import { Provider } from '@/components/ui/provider'
 import { RouterProvider } from 'react-router'
 import { router } from '@/router'
+import { Provider as ReduxProvider } from 'react-redux'
+import { store } from '@/stores'
+import { MasterDataInitializer } from '@/components/common/MasterDataInitializer'
+import { AuthInitializer } from '@/components/common/AuthInitializer'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider>
-      <RouterProvider router={router} />
-    </Provider>
+    <ReduxProvider store={store}>
+      <Provider>
+        <AuthInitializer>
+          <MasterDataInitializer>
+            <RouterProvider router={router} />
+          </MasterDataInitializer>
+        </AuthInitializer>
+      </Provider>
+    </ReduxProvider>
   </StrictMode>
 )

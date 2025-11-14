@@ -1,56 +1,51 @@
 import {
   Box,
   Button,
-  Checkbox,
   Field,
   Flex,
+  HStack,
   Image,
   Input,
   Link,
-  Stack,
+  Separator,
   Text,
   VStack
 } from '@chakra-ui/react'
 import { useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
-import { Link as RouterLink, useNavigate } from 'react-router'
+import { useForm } from 'react-hook-form'
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router'
+import { FaFacebook, FaGoogle } from 'react-icons/fa'
 import { PasswordInput } from '@/components/ui/password-input'
 import { toaster } from '@/components/ui/toaster'
-import { register } from '@/api/auth'
+import { login } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
-import { SellCarSection } from '@/components/shared/SellCarSection'
+import { SellCarSection } from '@/components/common/SellCarSection.tsx'
 
-interface RegisterFormData {
-  fullName: string
+interface LoginFormData {
   phone: string
   password: string
-  agreeToTerms: boolean
 }
 
-export function Register() {
+export function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
   const {
-    register: registerField,
+    register,
     handleSubmit,
-    formState: { errors },
-    control
-  } = useForm<RegisterFormData>({
-    defaultValues: {
-      agreeToTerms: false
-    }
-  })
+    formState: { errors }
+  } = useForm<LoginFormData>()
 
-  const onSubmit = async (formData: RegisterFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const { data: authData, error } = await register(formData)
+      const { data: authData, error } = await login(data)
 
       if (error) {
         toaster.create({
-          title: 'Đăng ký thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi đăng ký',
+          title: 'Đăng nhập thất bại',
+          description: error.message || 'Số điện thoại hoặc mật khẩu không đúng',
           type: 'error'
         })
         return
@@ -58,15 +53,16 @@ export function Register() {
 
       if (authData?.user) {
         toaster.create({
-          title: 'Đăng ký thành công',
-          description: 'Tài khoản của bạn đã được tạo thành công',
+          title: 'Đăng nhập thành công',
+          description: 'Chào mừng bạn quay trở lại',
           type: 'success'
         })
-        navigate('/login')
+        const from = (location.state as { from?: Location })?.from?.pathname || '/'
+        navigate(from, { replace: true })
       }
     } catch (error) {
       toaster.create({
-        title: 'Lỗi đăng ký',
+        title: 'Lỗi đăng nhập',
         description: 'Đã xảy ra lỗi, vui lòng thử lại',
         type: 'error'
       })
@@ -78,10 +74,8 @@ export function Register() {
   return (
     <Box bg='#F8FAFC' minH='calc(100vh - 200px)' py={4}>
       <VStack maxW='1200px' mx='auto' px={4} gap={6} align='stretch'>
+        {/* Login Section */}
         <Flex
-          maxW='1200px'
-          mx='auto'
-          px={4}
           justify='space-between'
           gap={8}
           align='flex-start'
@@ -110,7 +104,7 @@ export function Register() {
             </VStack>
           </VStack>
 
-          {/* Right side - Register Form */}
+          {/* Right side - Login Form */}
           <Box
             flex={1}
             maxW='407px'
@@ -122,34 +116,11 @@ export function Register() {
           >
             <VStack align='stretch' gap={5}>
               <Text fontSize='xl' fontWeight='700' color='#04113E' mb={2}>
-                Đăng ký tài khoản
+                Đăng nhập
               </Text>
 
               <form onSubmit={handleSubmit(onSubmit)}>
                 <VStack align='stretch' gap={4}>
-                  <Field.Root invalid={!!errors.fullName}>
-                    <Input
-                      placeholder='Họ và tên...'
-                      bg='white'
-                      borderColor='#E5E5E5'
-                      borderRadius='8px'
-                      px={4}
-                      py={2}
-                      fontSize='md'
-                      color='#737373'
-                      {...registerField('fullName', {
-                        required: 'Họ và tên là bắt buộc',
-                        minLength: {
-                          value: 2,
-                          message: 'Họ và tên phải có ít nhất 2 ký tự'
-                        }
-                      })}
-                    />
-                    {errors.fullName && (
-                      <Field.ErrorText>{errors.fullName.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
-
                   <Field.Root invalid={!!errors.phone}>
                     <Input
                       placeholder='Số điện thoại...'
@@ -160,7 +131,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...registerField('phone', {
+                      {...register('phone', {
                         required: 'Số điện thoại là bắt buộc',
                         pattern: {
                           value: /^[0-9]{10,11}$/,
@@ -174,14 +145,14 @@ export function Register() {
                   <Field.Root invalid={!!errors.password}>
                     <PasswordInput
                       placeholder='Mật khẩu...'
-                      bg='white'
+                      bg='#F5F5F5'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
                       px={4}
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...registerField('password', {
+                      {...register('password', {
                         required: 'Mật khẩu là bắt buộc',
                         minLength: {
                           value: 6,
@@ -194,48 +165,18 @@ export function Register() {
                     )}
                   </Field.Root>
 
-                  <Field.Root invalid={!!errors.agreeToTerms}>
-                    <Stack direction='row' gap={2} align='flex-start'>
-                      <Controller
-                        control={control}
-                        name='agreeToTerms'
-                        rules={{
-                          required: 'Bạn phải đồng ý với các điều khoản'
-                        }}
-                        render={({ field }) => (
-                          <Checkbox.Root
-                            checked={field.value}
-                            onCheckedChange={e => field.onChange(!!e.checked)}
-                          >
-                            <Checkbox.HiddenInput />
-                            <Checkbox.Control
-                              borderRadius='4px'
-                              bg={field.value ? '#204ED3' : '#D9D9D9'}
-                              borderColor={field.value ? '#204ED3' : '#D9D9D9'}
-                            />
-                          </Checkbox.Root>
-                        )}
-                      />
-                      <Text fontSize='sm' color='#737373' flex={1}>
-                        Bằng việc đăng ký tài khoản, bạn đồng ý với chúng tôi về{' '}
-                        <Link asChild>
-                          <RouterLink to='/terms' color='#204ED3'>
-                            Quy chế hoạt động
-                          </RouterLink>
-                        </Link>{' '}
-                        và{' '}
-                        <Link asChild>
-                          <RouterLink to='/policy' color='#204ED3'>
-                            Quy định chính sách
-                          </RouterLink>
-                        </Link>
-                        .
+                  <Link asChild>
+                    <RouterLink to='/forgot-password'>
+                      <Text
+                        fontSize='sm'
+                        color='#A1A1A1'
+                        textAlign='right'
+                        _hover={{ textDecoration: 'underline' }}
+                      >
+                        Quên mật khẩu
                       </Text>
-                    </Stack>
-                    {errors.agreeToTerms && (
-                      <Field.ErrorText>{errors.agreeToTerms.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
+                    </RouterLink>
+                  </Link>
 
                   <Button
                     type='submit'
@@ -250,23 +191,52 @@ export function Register() {
                     disabled={isLoading}
                     loading={isLoading}
                   >
-                    Đăng ký
+                    Đăng nhập
                   </Button>
                 </VStack>
               </form>
 
-              <Link asChild>
-                <RouterLink to='/login'>
-                  <Text
-                    fontSize='sm'
-                    color='#204ED3'
-                    textAlign='center'
-                    _hover={{ textDecoration: 'underline' }}
-                  >
-                    Bạn đã có tài khoản? Đăng nhập ngay
+              <VStack gap={3} mt={2}>
+                <HStack w='full' gap={6} align='center' justify='space-between'>
+                  <Separator variant='dashed' w='full' />
+                  <Text fontSize='xs' color='#A1A1A1' flex={1} textWrap='nowrap'>
+                    Hoặc đăng nhập bằng
                   </Text>
-                </RouterLink>
-              </Link>
+                  <Separator variant='dashed' w='full' />
+                </HStack>
+
+                <HStack w='full' justify='center' gap={16} py={3}>
+                  <Box
+                    as='button'
+                    cursor='pointer'
+                    _hover={{ opacity: 0.8 }}
+                    aria-label='Login with Facebook'
+                  >
+                    <FaFacebook size={28} color='#1778F2' />
+                  </Box>
+                  <Box
+                    as='button'
+                    cursor='pointer'
+                    _hover={{ opacity: 0.8 }}
+                    aria-label='Login with Google'
+                  >
+                    <FaGoogle size={28} />
+                  </Box>
+                </HStack>
+
+                <Link asChild>
+                  <RouterLink to='/register'>
+                    <Text
+                      fontSize='sm'
+                      color='#204ED3'
+                      textAlign='center'
+                      _hover={{ textDecoration: 'underline' }}
+                    >
+                      Bạn chưa có tài khoản? Đăng ký tài khoản
+                    </Text>
+                  </RouterLink>
+                </Link>
+              </VStack>
             </VStack>
           </Box>
 

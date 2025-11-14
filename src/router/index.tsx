@@ -7,7 +7,12 @@ import {
   ForgotPassword,
   Home,
   Products,
+  Liked,
   ProductDetail,
+  TestDriveBooking,
+  Settings,
+  Profile,
+  SellerRegistration,
   UsedCars,
   SoldCars
 } from '@/pages'
@@ -49,6 +54,32 @@ const routes: RouteObject[] = [
       {
         path: 'products/:id',
         element: createGuardedRoute(<ProductDetail />, routeGuards.public)
+      },
+      {
+        path: 'products/:id/booking',
+        element: createGuardedRoute(<TestDriveBooking />, routeGuards.protected)
+      },
+      {
+        path: 'favorites',
+        element: createGuardedRoute(<Liked />, routeGuards.protected)
+      },
+      {
+        path: 'settings',
+        element: createGuardedRoute(<Settings />, routeGuards.protected),
+        children: [
+          {
+            index: true,
+            element: createGuardedRoute(<Profile />, routeGuards.protected)
+          },
+          {
+            path: 'profile',
+            element: createGuardedRoute(<Profile />, routeGuards.protected)
+          },
+          {
+            path: 'seller',
+            element: createGuardedRoute(<SellerRegistration />, routeGuards.protected)
+          }
+        ]
       }
     ]
   }

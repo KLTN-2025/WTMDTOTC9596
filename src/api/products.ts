@@ -3,7 +3,7 @@ import { TABLES } from '@/configs/db'
 import type { ProductListItem, ProductDetailData, ProductFilters } from '@/types/products'
 import { normalizeRelation } from '@/utils/products'
 import camelcaseKeys from 'camelcase-keys'
-
+import type { User } from '@supabase/supabase-js'
 export type { ProductListItem, ProductDetailData, ProductFilters }
 
 export const getBrands = async (limit = 12) => {
@@ -50,7 +50,7 @@ export const getRecentProducts = async (limit = 8) => {
       id: camelized.id,
       title: camelized.title,
       price: camelized.price,
-      image: media[0] ?? 'https://via.placeholder.com/300x200',
+      image: media[0] || null,
       seller,
       createdAt: camelized.createdAt,
       imageCount: media.length,
@@ -104,7 +104,6 @@ export const getProductById = async (id: string) => {
       locations(name),
       colors(name),
       body_styles(name),
-      product_specifications(*),
       sellers(store_name,store_logo)
     `
     )
@@ -124,14 +123,14 @@ export const getProductById = async (id: string) => {
     : null
   const normalized: ProductDetailData = {
     ...camelized,
+    sellerId: camelized.sellerId || null,
     seller,
     brands: normalizeRelation(camelized.brands),
     fuels: normalizeRelation(camelized.fuels),
     transmissions: normalizeRelation(camelized.transmissions),
     locations: normalizeRelation(camelized.locations),
     colors: normalizeRelation(camelized.colors),
-    bodyStyles: normalizeRelation(camelized.bodyStyles),
-    productSpecifications: camelized.productSpecifications
+    bodyStyles: normalizeRelation(camelized.bodyStyles)
   }
 
   return { data: normalized, error: null }
@@ -145,6 +144,80 @@ export const getSimilarProducts = async (modelName: string, excludeId: string, l
     .neq('id', excludeId)
     .eq('model_name', modelName)
     .limit(limit)
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: data ? camelcaseKeys(data, { deep: true }) : null, error: null }
+}
+
+export const getSimilarProductsBySpecs = async (
+  product: ProductDetailData,
+  excludeId: string,
+  limit = 3
+) => {
+  let query = supabase
+    .from(TABLES.PRODUCTS)
+    .select(
+      'id,title,price,media_urls,mileage_km,origin,condition_type,warranty_policy,brand_id,fuel_id,transmission_id,body_style_id,drive,power,torque,engine_capacity,fuel_consumption,doors,weight,payload,ground_clearance'
+    )
+    .eq('status', 'available')
+    .neq('id', excludeId)
+
+  const productAny = product as any
+  const hasCondition = []
+
+  if (product.brandId) {
+    query = query.eq('brand_id', product.brandId)
+    hasCondition.push(true)
+  }
+
+  if (product.bodyStyleId) {
+    query = query.eq('body_style_id', product.bodyStyleId)
+    hasCondition.push(true)
+  }
+
+  if (productAny.fuelId) {
+    query = query.eq('fuel_id', productAny.fuelId)
+    hasCondition.push(true)
+  } else if (product.fuels?.name) {
+    const { data: fuelData } = await supabase
+      .from(TABLES.FUELS)
+      .select('id')
+      .eq('name', product.fuels.name)
+      .single()
+    if (fuelData) {
+      query = query.eq('fuel_id', fuelData.id)
+      hasCondition.push(true)
+    }
+  }
+
+  if (productAny.transmissionId) {
+    query = query.eq('transmission_id', productAny.transmissionId)
+    hasCondition.push(true)
+  } else if (product.transmissions?.name) {
+    const { data: transmissionData } = await supabase
+      .from(TABLES.TRANSMISSIONS)
+      .select('id')
+      .eq('name', product.transmissions.name)
+      .single()
+    if (transmissionData) {
+      query = query.eq('transmission_id', transmissionData.id)
+      hasCondition.push(true)
+    }
+  }
+
+  if (product.conditionType) {
+    query = query.eq('condition_type', product.conditionType)
+    hasCondition.push(true)
+  }
+
+  if (hasCondition.length === 0) {
+    return { data: [], error: null }
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(limit)
 
   if (error) {
     return { data: null, error }
@@ -170,7 +243,7 @@ export const getRelatedProducts = async (bodyStyleId: string, excludeId: string,
     const camelized = camelcaseKeys(p, { deep: true })
     return {
       ...camelized,
-      image: camelized.mediaUrls?.[0] ?? 'https://via.placeholder.com/318x231',
+      image: camelized.mediaUrls?.[0] || null,
       imageCount: camelized.mediaUrls?.length ?? 0,
       bodyStyles: normalizeRelation(camelized.bodyStyles),
       fuels: normalizeRelation(camelized.fuels),
@@ -185,7 +258,10 @@ export const getProducts = async (filters: ProductFilters = {}) => {
   let query = supabase
     .from(TABLES.PRODUCTS)
     .select(
-      '*,body_styles(name),fuels(name),transmissions(name),locations(name),colors(name),sellers(store_name,store_logo)'
+      '*,body_styles(name),fuels(name),transmissions(name),locations(name),colors(name),sellers(store_name,store_logo)',
+      {
+        count: 'exact'
+      }
     )
 
   if (filters.status) {
@@ -211,6 +287,19 @@ export const getProducts = async (filters: ProductFilters = {}) => {
 
   if (filters.year && filters.year !== 'Tất cả') {
     query = query.eq('year_manufactured', filters.year)
+  }
+
+  if (filters.brands && filters.brands.length > 0) {
+    const { data: brandData } = await supabase
+      .from(TABLES.BRANDS)
+      .select('id')
+      .in('name', filters.brands)
+    if (brandData && brandData.length > 0) {
+      query = query.in(
+        'brand_id',
+        brandData.map(b => b.id)
+      )
+    }
   }
 
   if (filters.conditionTypes && filters.conditionTypes.length > 0) {
@@ -289,9 +378,11 @@ export const getProducts = async (filters: ProductFilters = {}) => {
   if (filters.sortBy === 'newest') {
     query = query.order('created_at', { ascending: false })
   } else if (filters.sortBy === 'price_asc') {
-    query = query.order('price', { ascending: true })
+    query = query.order('price', { ascending: true }).order('created_at', { ascending: false })
   } else if (filters.sortBy === 'price_desc') {
-    query = query.order('price', { ascending: false })
+    query = query.order('price', { ascending: false }).order('created_at', { ascending: false })
+  } else {
+    query = query.order('created_at', { ascending: false })
   }
 
   if (filters.limit) {
@@ -302,10 +393,10 @@ export const getProducts = async (filters: ProductFilters = {}) => {
     query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1)
   }
 
-  const { data, error } = await query
+  const { data, error, count } = await query
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error, count: null }
   }
 
   const normalized = (data ?? []).map(d => {
@@ -319,7 +410,7 @@ export const getProducts = async (filters: ProductFilters = {}) => {
       : null
     return {
       ...camelized,
-      image: media[0] ?? 'https://via.placeholder.com/250x231',
+      image: media[0] || '',
       seller,
       imageCount: media.length,
       statsSelling: camelized.statsSelling ?? 0,
@@ -334,7 +425,7 @@ export const getProducts = async (filters: ProductFilters = {}) => {
     }
   })
 
-  return { data: normalized, error: null }
+  return { data: normalized, error: null, count }
 }
 
 export const getLocations = async () => {
@@ -392,11 +483,7 @@ export const getBodyStyles = async () => {
   return { data: data ? camelcaseKeys(data, { deep: true }) : null, error: null }
 }
 
-export const getFavorites = async () => {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+export const getFavorites = async (user: User | null) => {
   if (!user) {
     return { data: null, error: { message: 'User not authenticated' } }
   }
@@ -465,11 +552,7 @@ export const getFavorites = async () => {
   return { data: normalized, error: null }
 }
 
-export const addFavorite = async (productId: string) => {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+export const addFavorite = async (productId: string, user: User | null) => {
   if (!user) {
     return { data: null, error: { message: 'User not authenticated' } }
   }
@@ -490,11 +573,7 @@ export const addFavorite = async (productId: string) => {
   return { data: camelcaseKeys(data, { deep: true }), error: null }
 }
 
-export const checkFavorite = async (productId: string) => {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+export const checkFavorite = async (productId: string, user: User | null) => {
   if (!user) {
     return { data: null, error: null }
   }
@@ -513,11 +592,7 @@ export const checkFavorite = async (productId: string) => {
   return { data: data ? camelcaseKeys(data, { deep: true }) : null, error: null }
 }
 
-export const removeFavorite = async (favoriteId: string) => {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+export const removeFavorite = async (favoriteId: string, user: User | null) => {
   if (!user) {
     return { error: { message: 'User not authenticated' } }
   }
@@ -531,11 +606,7 @@ export const removeFavorite = async (favoriteId: string) => {
   return { error }
 }
 
-export const removeFavoriteByProductId = async (productId: string) => {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+export const removeFavoriteByProductId = async (productId: string, user: User | null) => {
   if (!user) {
     return { error: { message: 'User not authenticated' } }
   }

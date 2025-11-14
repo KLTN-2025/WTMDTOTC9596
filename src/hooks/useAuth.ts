@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/configs/supabase'
+import { useAppSelector } from '@/stores/hooks'
 import type { User, Session } from '@supabase/supabase-js'
 
 export interface AuthState {
@@ -9,65 +8,13 @@ export interface AuthState {
   isAuthenticated: boolean
 }
 
-export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    isLoading: true,
-    isAuthenticated: false
-  })
+export function useAuth(): AuthState {
+  const authState = useAppSelector(state => state.auth)
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const {
-          data: { session },
-          error
-        } = await supabase.auth.getSession()
-
-        if (error) {
-          setAuthState({
-            user: null,
-            session: null,
-            isLoading: false,
-            isAuthenticated: false
-          })
-          return
-        }
-
-        setAuthState({
-          user: session?.user ?? null,
-          session: session,
-          isLoading: false,
-          isAuthenticated: !!session?.user
-        })
-      } catch (error) {
-        setAuthState({
-          user: null,
-          session: null,
-          isLoading: false,
-          isAuthenticated: false
-        })
-      }
-    }
-
-    checkSession()
-
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthState({
-        user: session?.user ?? null,
-        session: session,
-        isLoading: false,
-        isAuthenticated: !!session?.user
-      })
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  return authState
+  return {
+    user: authState.user,
+    session: authState.session,
+    isLoading: authState.isLoading,
+    isAuthenticated: authState.isAuthenticated
+  }
 }

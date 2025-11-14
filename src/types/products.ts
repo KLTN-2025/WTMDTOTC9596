@@ -26,6 +26,7 @@ export type ProductDetailData = {
   title: string
   price: number
   yearManufactured: string | null
+  sellerId: string | null
   seller?: {
     storeName: string
     storeLogo: string | null
@@ -48,23 +49,22 @@ export type ProductDetailData = {
   locations: { name: string } | null
   colors: { name: string } | null
   bodyStyles: { name: string } | null
-  productSpecifications: {
-    drive: string | null
-    power: string | null
-    torque: string | null
-    engineCapacity: string | null
-    fuelConsumption: string | null
-    doors: number | null
-    weight: string | null
-    payload: string | null
-    groundClearance: string | null
-  } | null
+  drive: string | null
+  power: string | null
+  torque: string | null
+  engineCapacity: string | null
+  fuelConsumption: string | null
+  doors: number | null
+  weight: string | null
+  payload: string | null
+  groundClearance: string | null
 }
 
 export type ProductFilters = {
   q?: string
   location?: string
   year?: string
+  brands?: string[]
   conditionTypes?: string[]
   fuels?: string[]
   transmissions?: string[]

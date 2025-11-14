@@ -1,7 +1,9 @@
 export const TABLES = {
   PRODUCTS: 'products',
-  PRODUCT_SPECIFICATIONS: 'product_specifications',
   PRODUCT_FAVORITES: 'product_favorites',
+  PRODUCT_COMMENTS: 'product_comments',
+  PRODUCT_REACTIONS: 'product_reactions',
+  TEST_DRIVE_BOOKINGS: 'test_drive_bookings',
   BRANDS: 'brands',
   CATEGORIES: 'categories',
   LOCATIONS: 'locations',
@@ -11,4 +13,9 @@ export const TABLES = {
   BODY_STYLES: 'body_styles',
   SELLERS: 'sellers',
   PROFILES: 'profiles'
+}
+
+export const STORAGE_BUCKETS = {
+  AVATARS: 'avatars',
+  MEDIA: 'media'
 }

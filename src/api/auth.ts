@@ -1,8 +1,7 @@
-import { supabase } from '@/configs/supabase'
+import { supabase, lambdaSupabase } from '@/configs/supabase'
 import { TABLES } from '@/configs/db'
 import type { LoginFormData, RegisterFormData } from '@/types/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber'
-
 export const register = async (formData: RegisterFormData) => {
   const phone = parsePhoneNumber(formData.phone, { regionCode: 'VN' }).number?.e164 ?? ''
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -36,14 +35,44 @@ export const login = async (formData: LoginFormData) => {
   })
 }
 
-export const resetPassword = async (phone: string) => {
-  const formattedPhone = parsePhoneNumber(phone, { regionCode: 'VN' }).number?.e164 ?? ''
-  return await supabase.auth.signInWithOtp({
-    phone: formattedPhone,
-    options: {
-      shouldCreateUser: false
+export const resetPassword = async (phone: string, newPassword: string) => {
+  const formattedPhone =
+    parsePhoneNumber(phone, { regionCode: 'VN' }).number?.e164.replace(/\D/g, '') ?? ''
+
+  if (!formattedPhone) {
+    return {
+      data: null,
+      error: { message: 'Số điện thoại không hợp lệ' }
+    }
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    return {
+      data: null,
+      error: { message: 'Mật khẩu phải có ít nhất 6 ký tự' }
+    }
+  }
+
+  const { data, error } = await lambdaSupabase.functions.invoke('reset-password', {
+    body: {
+      phoneNumber: formattedPhone,
+      newPassword
     }
   })
+
+  if (error) {
+    return {
+      data: null,
+      error: {
+        message: error.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu'
+      }
+    }
+  }
+
+  return {
+    data,
+    error: null
+  }
 }
 
 export const logout = async () => {

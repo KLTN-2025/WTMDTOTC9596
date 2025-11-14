@@ -47,15 +47,15 @@ export function createGuardedRoute(
   switch (config.type) {
     case 'protected':
       return (
-        <ProtectedRoute redirectTo={config.redirectTo} fallback={config.fallback}>
+        <ProtectedRoute redirectTo={config.redirectTo!} fallback={config.fallback}>
           {element}
         </ProtectedRoute>
       )
     case 'guest':
       return (
         <PublicRoute
-          redirectTo={config.redirectTo}
-          redirectIfAuthenticated={config.redirectIfAuthenticated}
+          redirectTo={config.redirectTo!}
+          redirectIfAuthenticated={config.redirectIfAuthenticated!}
         >
           {element}
         </PublicRoute>
