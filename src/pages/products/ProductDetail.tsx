@@ -306,7 +306,7 @@ export function ProductDetail() {
                               color='#204ED3'
                               _hover={{ textDecoration: 'underline' }}
                             >
-                              {productData.product?.modelName || 'N/A'}
+                              {productData.product?.models?.name || 'N/A'}
                             </Text>
                           </RouterLink>
                         </VStack>
@@ -323,7 +323,7 @@ export function ProductDetail() {
                             Phiên bản xe
                           </Text>
                           <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.versionName || 'N/A'}
+                            {productData.product?.versions?.name || 'N/A'}
                           </Text>
                         </VStack>
                         <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
@@ -449,7 +449,7 @@ export function ProductDetail() {
               />
               <StoreInfoCard
                 store={{
-                  name: productData.product?.seller?.storeName || 'N/A',
+                  name: productData.product?.store?.storeName || 'N/A',
                   rating: 0,
                   activeTime: formatTimeAgo(productData.product?.createdAt || ''),
                   responseRate: '86%',

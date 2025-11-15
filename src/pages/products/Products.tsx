@@ -896,17 +896,17 @@ export function Products() {
                       <Box borderTop='1px solid #E5E7EB' pt={2} mt={2}>
                         <Flex justify='space-between' align='center' wrap='wrap' gap={2}>
                           <HStack gap={2}>
-                            {product.seller?.storeLogo && (
+                            {product.store?.storeLogo && (
                               <Image
-                                src={product.seller.storeLogo}
-                                alt={product.seller.storeName}
+                                src={product.store.storeLogo}
+                                alt={product.store.storeName}
                                 width='24px'
                                 height='24px'
                                 borderRadius='full'
                               />
                             )}
                             <Text fontSize='12px' fontWeight='600' color='#1B2C5D'>
-                              {product.seller?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
+                              {product.store?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
                             </Text>
                           </HStack>
                           <HStack gap={3}>

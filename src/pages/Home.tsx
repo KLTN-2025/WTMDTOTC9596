@@ -649,7 +649,7 @@ export function Home() {
                             <FaStore />
                           </Icon>
                           <Text fontSize='16px' fontWeight='700' color='#04113E' lineHeight='20px'>
-                            {recentProducts[0].seller?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
+                            {recentProducts[0].store?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
                           </Text>
                         </HStack>
                       </Flex>

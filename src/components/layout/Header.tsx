@@ -1,39 +1,18 @@
 import { Box, Button, Flex, HStack, Icon, Image, Link, Menu, Portal, Text } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import { FaUser } from 'react-icons/fa'
-import { HiBars3, HiOutlineHeart } from 'react-icons/hi2'
+import { HiBars3, HiOutlineHeart, HiOutlineClipboardDocumentList } from 'react-icons/hi2'
 import { IoCarSportOutline, IoStorefrontOutline } from 'react-icons/io5'
-import { FiSettings, FiLogOut } from 'react-icons/fi'
-import { supabase } from '@/configs/supabase'
+import { FiLogOut, FiShield, FiCalendar, FiUsers } from 'react-icons/fi'
 import { logout } from '@/api/auth'
 import { toaster } from '@/components/ui/toaster'
+import { useAuth } from '@/hooks/useAuth'
 import logo from '@/assets/images/logo.png'
+import { PATHS } from '@/configs/paths'
 
 export function Header() {
   const navigate = useNavigate()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-
-    checkSession()
-
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
+  const { isAuthenticated } = useAuth()
 
   const handleLogout = async () => {
     try {
@@ -85,7 +64,7 @@ export function Header() {
           </HStack>
 
           <HStack gap={4}>
-            {!isLoggedIn ? (
+            {!isAuthenticated ? (
               <RouterLink to='/login'>
                 <Button
                   variant='outline'
@@ -106,7 +85,7 @@ export function Header() {
               </RouterLink>
             ) : (
               <>
-                <RouterLink to='/sell'>
+                <RouterLink to={PATHS.SELL}>
                   <Button
                     colorPalette='blue'
                     variant='solid'
@@ -146,11 +125,35 @@ export function Header() {
                   <Portal>
                     <Menu.Positioner>
                       <Menu.Content minW='200px'>
-                        <Menu.Item value='settings' onClick={() => navigate('/settings/profile')}>
+                        <Menu.Item
+                          value='manage-listings'
+                          onClick={() => navigate(PATHS.USER.MANAGE_LISTINGS)}
+                        >
                           <Icon>
-                            <FiSettings />
+                            <HiOutlineClipboardDocumentList />
                           </Icon>
-                          Settings
+                          Quản lý tin
+                        </Menu.Item>
+                        <Menu.Item value='test-drives' onClick={() => navigate(PATHS.TEST_DRIVES)}>
+                          <Icon>
+                            <FiCalendar />
+                          </Icon>
+                          Quản lý lịch hẹn
+                        </Menu.Item>
+                        <Menu.Item
+                          value='customer-contacts'
+                          onClick={() => navigate(PATHS.CUSTOMER_CONTACTS)}
+                        >
+                          <Icon>
+                            <FiUsers />
+                          </Icon>
+                          Danh sách khách hàng
+                        </Menu.Item>
+                        <Menu.Item value='admin' onClick={() => navigate('/admin')}>
+                          <Icon>
+                            <FiShield />
+                          </Icon>
+                          Admin
                         </Menu.Item>
                         <Menu.Item value='logout' onClick={handleLogout}>
                           <Icon>

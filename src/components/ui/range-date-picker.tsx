@@ -1,13 +1,14 @@
 'use client'
 
 import { Box, Input, InputGroup } from '@chakra-ui/react'
-import { SingleDatepicker } from 'chakra-dayzed-datepicker'
-import type { SingleDatepickerProps } from 'chakra-dayzed-datepicker'
+import { RangeDatepicker } from 'chakra-dayzed-datepicker'
+import type { RangeDatepickerProps } from 'chakra-dayzed-datepicker'
 import * as React from 'react'
 
-export interface DatePickerProps extends Omit<SingleDatepickerProps, 'onDateChange' | 'date'> {
-  value?: Date | null
-  onChange?: (date: Date | null) => void
+export interface RangeDatePickerProps
+  extends Omit<RangeDatepickerProps, 'onDateChange' | 'selectedDates'> {
+  value?: Date[] | null
+  onChange?: (dates: Date[]) => void
   placeholder?: string
   isInvalid?: boolean
   errorMessage?: string | undefined
@@ -23,12 +24,12 @@ export interface DatePickerProps extends Omit<SingleDatepickerProps, 'onDateChan
   name?: string
 }
 
-export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
-  function DatePicker(props, ref) {
+export const RangeDatePicker = React.forwardRef<HTMLInputElement, RangeDatePickerProps>(
+  function RangeDatePicker(props, ref) {
     const {
       value,
       onChange,
-      placeholder = 'Chọn ngày',
+      placeholder = 'Chọn khoảng ngày',
       isInvalid = false,
       errorMessage,
       inputProps,
@@ -46,15 +47,15 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       ...rest
     } = props
 
-    const [selectedDate, setSelectedDate] = React.useState<Date | null>(value || null)
+    const [selectedDates, setSelectedDates] = React.useState<Date[]>(value || [])
 
     React.useEffect(() => {
-      setSelectedDate(value || null)
+      setSelectedDates(value || [])
     }, [value])
 
-    const handleDateChange = (date: Date | null) => {
-      setSelectedDate(date)
-      onChange?.(date)
+    const handleDateChange = (dates: Date[]) => {
+      setSelectedDates(dates)
+      onChange?.(dates)
     }
 
     const defaultInputProps: React.ComponentProps<typeof Input> = {
@@ -66,7 +67,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       px: 4,
       py: 2,
       fontSize: size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md',
-      color: selectedDate ? '#04113E' : '#737373',
+      color: selectedDates.length > 0 ? '#04113E' : '#737373',
       _placeholder: {
         color: '#737373',
         opacity: 1
@@ -101,6 +102,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       return {
         ...baseProps,
         ...propsConfigs.inputProps,
+        ref: ref || (propsConfigs.inputProps as any).ref,
         placeholder: propsConfigs.inputProps.placeholder || placeholder,
         _placeholder: {
           ...defaultInputProps._placeholder,
@@ -114,8 +116,8 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           ...defaultInputProps._focus,
           ...(propsConfigs.inputProps._focus || {})
         }
-      }
-    }, [propsConfigs?.inputProps, defaultInputProps, placeholder])
+      } as React.ComponentProps<typeof Input>
+    }, [propsConfigs?.inputProps, defaultInputProps, placeholder, ref])
 
     const defaultPropsConfigs = {
       dateNavBtnProps: {
@@ -144,6 +146,10 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       },
       inputProps: mergedInputProps,
       popoverCompProps: {
+        positioning: {
+          placement: 'bottom-start',
+          strategy: 'fixed'
+        },
         ...propsConfigs?.popoverCompProps
       }
     }
@@ -169,23 +175,24 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       ...configs
     }
 
-    const singleDatepickerProps: SingleDatepickerProps = {
-      name: name || 'date-picker-input',
+    const rangeDatepickerProps: RangeDatepickerProps = {
+      name: name || 'range-date-picker-input',
       onDateChange: handleDateChange,
       propsConfigs: defaultPropsConfigs,
       configs: defaultConfigs,
       disabled,
       triggerVariant: 'input',
-      ...(selectedDate ? { date: selectedDate } : {}),
-      ...(minDate && { minDate }),
-      ...(maxDate && { maxDate }),
+      selectedDates: selectedDates.length > 0 ? selectedDates : [],
+      usePortal: true,
+      ...(minDate ? { minDate } : {}),
+      ...(maxDate ? { maxDate } : {}),
       ...rest
     }
 
     return (
       <Box {...containerProps}>
         <InputGroup>
-          <SingleDatepicker {...singleDatepickerProps} />
+          <RangeDatepicker {...rangeDatepickerProps} />
         </InputGroup>
         {isInvalid && errorMessage && (
           <Box mt={1} fontSize='sm' color='red.500'>

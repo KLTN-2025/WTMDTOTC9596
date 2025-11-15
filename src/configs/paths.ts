@@ -10,11 +10,15 @@ export const PATHS = {
   SOLD_CARS: '/sold-cars',
   FAVORITES: '/favorites',
   HISTORY: '/history',
-  MANAGE: '/manage',
+  SELL: '/sell',
   SETTINGS: {
-    ROOT: '/settings',
-    PROFILE: '/settings/profile',
-    SELLER: '/settings/seller'
+    ROOT: '/settings'
   },
-  STORES: '/stores'
+  STORE_REGISTRATION: '/store-registration',
+  USER: {
+    MANAGE_LISTINGS: '/manage-listings'
+  },
+  STORES: '/stores',
+  TEST_DRIVES: '/test-drives',
+  CUSTOMER_CONTACTS: '/customer-contacts'
 } as const

@@ -11,7 +11,9 @@ export const TABLES = {
   TRANSMISSIONS: 'transmissions',
   COLORS: 'colors',
   BODY_STYLES: 'body_styles',
-  SELLERS: 'sellers',
+  MODELS: 'models',
+  VERSIONS: 'versions',
+  STORES: 'stores',
   PROFILES: 'profiles'
 }
 

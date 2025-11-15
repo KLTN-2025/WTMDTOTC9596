@@ -8,7 +8,7 @@ export type ProductListItem = {
   id: string
   title: string
   price: number
-  seller?: {
+  store?: {
     storeName: string
     storeLogo: string | null
   } | null
@@ -26,8 +26,8 @@ export type ProductDetailData = {
   title: string
   price: number
   yearManufactured: string | null
-  sellerId: string | null
-  seller?: {
+  storeId: string | null
+  store?: {
     storeName: string
     storeLogo: string | null
   } | null
@@ -37,8 +37,10 @@ export type ProductDetailData = {
   origin: string | null
   conditionType: string
   seats: number | null
-  modelName: string | null
-  versionName: string | null
+  modelId: string | null
+  versionId: string | null
+  models?: { name: string } | null
+  versions?: { name: string } | null
   mediaUrls: string[] | null
   createdAt: string | null
   brandId: string | null
@@ -83,7 +85,7 @@ export type Product = {
   title: string
   price: number
   image: string
-  seller?: {
+  store?: {
     storeName: string
     storeLogo: string | null
   } | null
@@ -93,13 +95,32 @@ export type Product = {
   statsSold?: number
   year?: string
   origin?: string
-  status?: 'available' | 'sold'
+  status?: 'pending' | 'available' | 'sold' | 'rejected'
   mediaUrls?: string[]
   bodyStyles?: { name: string } | null
   fuels?: { name: string } | null
   transmissions?: { name: string } | null
   locations?: { name: string } | null
   colors?: { name: string } | null
+  updatedAt?: string | null
+}
+
+export type StoreProduct = {
+  id: string
+  title: string
+  price: number
+  mediaUrls: string[]
+  status: 'pending' | 'available' | 'sold' | 'rejected'
+  updatedAt: string | null
+  createdAt: string | null
+}
+
+export type StoreProductCounts = {
+  total: number
+  pending: number
+  available: number
+  sold: number
+  rejected: number
 }
 
 export type NewCarModel = {
@@ -109,6 +130,12 @@ export type NewCarModel = {
   year: string
   priceRange: string
   image: string
-  modelName: string
+  modelId: string | null
+  models?: { name: string } | null
   brandId: string | null
+}
+
+export type Location = {
+  id: string
+  name: string
 }

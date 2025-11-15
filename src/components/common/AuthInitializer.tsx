@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { useAppDispatch, useAppSelector } from '@/stores/hooks'
-import { initializeAuth, setAuth, clearAuth } from '@/stores/auth/authSlice'
+import { initializeAuth, setAuth, clearAuth, fetchUserData } from '@/stores/auth/authSlice'
 import { supabase } from '@/configs/supabase'
 
 interface AuthInitializerProps {
@@ -26,6 +26,7 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
             session: session
           })
         )
+        dispatch(fetchUserData(session.user))
       } else {
         dispatch(clearAuth())
       }

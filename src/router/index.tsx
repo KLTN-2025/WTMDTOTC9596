@@ -10,11 +10,10 @@ import {
   Liked,
   ProductDetail,
   TestDriveBooking,
-  Settings,
-  Profile,
-  SellerRegistration,
   UsedCars,
-  SoldCars
+  SoldCars,
+  Stores,
+  StoreRegistration
 } from '@/pages'
 import { createGuardedRoute, routeGuards } from './guards'
 
@@ -64,22 +63,12 @@ const routes: RouteObject[] = [
         element: createGuardedRoute(<Liked />, routeGuards.protected)
       },
       {
-        path: 'settings',
-        element: createGuardedRoute(<Settings />, routeGuards.protected),
-        children: [
-          {
-            index: true,
-            element: createGuardedRoute(<Profile />, routeGuards.protected)
-          },
-          {
-            path: 'profile',
-            element: createGuardedRoute(<Profile />, routeGuards.protected)
-          },
-          {
-            path: 'seller',
-            element: createGuardedRoute(<SellerRegistration />, routeGuards.protected)
-          }
-        ]
+        path: 'stores',
+        element: createGuardedRoute(<Stores />, routeGuards.protected)
+      },
+      {
+        path: 'store-registration',
+        element: createGuardedRoute(<StoreRegistration />, routeGuards.protected)
       }
     ]
   }

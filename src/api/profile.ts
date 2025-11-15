@@ -11,6 +11,7 @@ export type Profile = {
   dob: string | null
   cid: string | null
   doi: string | null
+  email: string | null
   joinDate: string | null
   role: 'buyer' | 'seller' | 'admin'
   createdAt: string
@@ -24,6 +25,7 @@ export type UpdateProfileData = {
   dob?: string
   cid?: string
   doi?: string
+  email?: string
 }
 
 export const getProfile = async (user: User | null) => {
@@ -59,6 +61,7 @@ export const updateProfile = async (updateData: UpdateProfileData, user: User | 
       dob: updateData.dob || null,
       cid: updateData.cid || null,
       doi: updateData.doi || null,
+      email: updateData.email || null,
       updated_at: new Date().toISOString()
     })
     .eq('id', user.id)

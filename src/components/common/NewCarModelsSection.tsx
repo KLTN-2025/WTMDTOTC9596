@@ -18,6 +18,7 @@ import type { NewCarModel } from '@/types/products'
 import { DEFAULT_VALUES } from '@/configs/constants'
 import { PATHS } from '@/configs/paths'
 import { useMasterData } from '@/hooks/useMasterData'
+import { normalizeRelation } from '@/utils/products'
 
 const buildProductsPath = (params?: { status?: string }) => {
   if (!params) return PATHS.PRODUCTS
@@ -72,29 +73,33 @@ export function NewCarModelsSection() {
         }
 
         const grouped = (data ?? []).reduce(
-          (acc, product) => {
-            const key = `${product.modelName}-${product.yearManufactured}`
+          (acc, product: any) => {
+            const camelized = product
+            const models = normalizeRelation(camelized.models)
+            const modelName = models?.name || DEFAULT_VALUES.UNKNOWN
+            const key = `${modelName}-${camelized.yearManufactured}`
             if (!acc[key]) {
               let brandName: string = DEFAULT_VALUES.UNKNOWN
-              if (product.brands) {
-                const brandData = Array.isArray(product.brands) ? product.brands[0] : product.brands
-                brandName = (brandData as { name: string } | null)?.name || DEFAULT_VALUES.UNKNOWN
+              if (camelized.brands) {
+                const brandData = normalizeRelation(camelized.brands)
+                brandName = brandData?.name || DEFAULT_VALUES.UNKNOWN
               }
               acc[key] = {
-                id: product.id,
+                id: camelized.id,
                 brand: brandName,
-                name: product.modelName || DEFAULT_VALUES.UNKNOWN,
-                year: product.yearManufactured || '',
+                name: modelName,
+                year: camelized.yearManufactured || '',
                 priceRange: '',
-                image: (product.mediaUrls as string[] | null)?.[0] || '',
-                modelName: product.modelName || '',
-                brandId: product.brandId,
+                image: (camelized.mediaUrls as string[] | null)?.[0] || '',
+                modelId: camelized.modelId,
+                models: models,
+                brandId: camelized.brandId,
                 prices: []
               }
             }
             const model = acc[key]
             if (model && model.prices) {
-              model.prices.push(product.price)
+              model.prices.push(camelized.price)
             }
             return acc
           },
