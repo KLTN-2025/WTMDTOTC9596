@@ -8,10 +8,12 @@ import {
   Home,
   Products,
   Liked,
+  ManageListings,
   ProductDetail,
   TestDriveBooking,
   UsedCars,
   SoldCars,
+  Sell,
   Stores,
   StoreRegistration
 } from '@/pages'
@@ -61,6 +63,14 @@ const routes: RouteObject[] = [
       {
         path: 'favorites',
         element: createGuardedRoute(<Liked />, routeGuards.protected)
+      },
+      {
+        path: 'manage-listings',
+        element: createGuardedRoute(<ManageListings />, routeGuards.protected)
+      },
+      {
+        path: 'sell',
+        element: createGuardedRoute(<Sell />, routeGuards.protected)
       },
       {
         path: 'stores',

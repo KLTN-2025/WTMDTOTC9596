@@ -5,38 +5,33 @@ import { HiBars3, HiOutlineHeart, HiOutlineClipboardDocumentList } from 'react-i
 import { IoCarSportOutline, IoStorefrontOutline } from 'react-icons/io5'
 import { FiLogOut, FiShield, FiCalendar, FiUsers } from 'react-icons/fi'
 import { logout } from '@/api/auth'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/hooks/useAuth'
 import logo from '@/assets/images/logo.png'
 import { PATHS } from '@/configs/paths'
 
 export function Header() {
   const navigate = useNavigate()
+  const toast = useToast()
   const { isAuthenticated } = useAuth()
 
   const handleLogout = async () => {
     try {
       const { error } = await logout()
       if (error) {
-        toaster.create({
-          title: 'Đăng xuất thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi đăng xuất',
-          type: 'error'
+        toast.error(error.message || 'Đã xảy ra lỗi khi đăng xuất', {
+          title: 'Đăng xuất thất bại'
         })
         return
       }
 
-      toaster.create({
-        title: 'Đăng xuất thành công',
-        description: 'Bạn đã đăng xuất khỏi tài khoản',
-        type: 'success'
+      toast.success('Bạn đã đăng xuất khỏi tài khoản', {
+        title: 'Đăng xuất thành công'
       })
       navigate('/')
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi đăng xuất',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi đăng xuất'
       })
     }
   }

@@ -37,10 +37,14 @@ export const getProfile = async (user: User | null) => {
     .from(TABLES.PROFILES)
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (error) {
     return { data: null, error }
+  }
+
+  if (!data) {
+    return { data: null, error: null }
   }
 
   const camelized = camelcaseKeys(data, { deep: true }) as Profile

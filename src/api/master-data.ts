@@ -27,22 +27,6 @@ export const getLocations = async () => {
   }
 }
 
-export const getCategories = async () => {
-  const { data, error } = await supabase
-    .from(TABLES.CATEGORIES)
-    .select('*')
-    .order('name', { ascending: true })
-
-  if (error) {
-    return { data: null, error }
-  }
-
-  return {
-    data: data ? (camelcaseKeys(data, { deep: true }) as MasterDataItem[]) : null,
-    error: null
-  }
-}
-
 export const getBrands = async () => {
   const { data, error } = await supabase
     .from(TABLES.BRANDS)
@@ -163,21 +147,20 @@ export const getVersions = async () => {
 }
 
 export const getAllMasterData = async () => {
-  const [locations, categories, brands, colors, fuels, transmissions, bodyStyles, versions] =
-    await Promise.all([
+  const [locations, brands, colors, fuels, transmissions, bodyStyles, versions] = await Promise.all(
+    [
       getLocations(),
-      getCategories(),
       getBrands(),
       getColors(),
       getFuels(),
       getTransmissions(),
       getBodyStyles(),
       getVersions()
-    ])
+    ]
+  )
 
   return {
     locations,
-    categories,
     brands,
     colors,
     fuels,
@@ -248,12 +231,6 @@ export const createLocation = (input: CreateMasterDataInput) =>
 export const updateLocation = (id: string, input: UpdateMasterDataInput) =>
   updateMasterDataItem(TABLES.LOCATIONS, id, input)
 export const deleteLocation = (id: string) => deleteMasterDataItem(TABLES.LOCATIONS, id)
-
-export const createCategory = (input: CreateMasterDataInput) =>
-  createMasterDataItem(TABLES.CATEGORIES, input)
-export const updateCategory = (id: string, input: UpdateMasterDataInput) =>
-  updateMasterDataItem(TABLES.CATEGORIES, id, input)
-export const deleteCategory = (id: string) => deleteMasterDataItem(TABLES.CATEGORIES, id)
 
 export const createBrand = (input: CreateMasterDataInput) =>
   createMasterDataItem(TABLES.BRANDS, input)

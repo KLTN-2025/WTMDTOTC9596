@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { resetPassword } from '@/api/auth'
 import { PasswordInput } from '@/components/ui/password-input'
 import logo from '@/assets/images/logo.png'
@@ -29,6 +29,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPassword() {
   const navigate = useNavigate()
+  const toast = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const {
     register,
@@ -44,28 +45,22 @@ export function ForgotPassword() {
       const { error } = await resetPassword(data.phone, data.password)
 
       if (error) {
-        toaster.create({
-          title: 'Đặt lại mật khẩu thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu',
-          type: 'error'
+        toast.error(error.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu', {
+          title: 'Đặt lại mật khẩu thất bại'
         })
         return
       }
 
-      toaster.create({
-        title: 'Đặt lại mật khẩu thành công',
-        description: 'Mật khẩu của bạn đã được cập nhật. Vui lòng đăng nhập lại.',
-        type: 'success'
+      toast.success('Mật khẩu của bạn đã được cập nhật. Vui lòng đăng nhập lại.', {
+        title: 'Đặt lại mật khẩu thành công'
       })
 
       setTimeout(() => {
         navigate('/login')
       }, 1500)
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi đặt lại mật khẩu',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi đặt lại mật khẩu'
       })
     } finally {
       setIsLoading(false)

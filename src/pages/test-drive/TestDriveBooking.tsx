@@ -20,7 +20,7 @@ import { z } from 'zod'
 import { useParams, useNavigate } from 'react-router'
 import { getProductById } from '@/api/products'
 import { createTestDriveBooking } from '@/api/test-drive'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import type { ProductDetailData } from '@/types/products'
 import { formatTimeAgo } from '@/utils/date'
 import { useAuth } from '@/hooks/useAuth'
@@ -43,6 +43,7 @@ export function TestDriveBooking() {
   const { user } = useAuth()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const toast = useToast()
   const [product, setProduct] = useState<ProductDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -102,22 +103,14 @@ export function TestDriveBooking() {
         const { data, error } = await getProductById(id)
 
         if (error || !data) {
-          toaster.create({
-            title: 'Lỗi',
-            description: 'Không tìm thấy sản phẩm',
-            type: 'error'
-          })
+          toast.error('Không tìm thấy sản phẩm')
           navigate('/products')
           return
         }
 
         setProduct(data)
       } catch (error) {
-        toaster.create({
-          title: 'Lỗi',
-          description: 'Đã xảy ra lỗi khi tải thông tin sản phẩm',
-          type: 'error'
-        })
+        toast.error('Đã xảy ra lỗi khi tải thông tin sản phẩm')
         navigate('/products')
       } finally {
         setIsLoading(false)
@@ -148,27 +141,17 @@ export function TestDriveBooking() {
       )
 
       if (error) {
-        toaster.create({
-          title: 'Lỗi',
-          description: error.message || 'Không thể tạo lịch hẹn lái thử',
-          type: 'error'
-        })
+        toast.error(error.message || 'Không thể tạo lịch hẹn lái thử')
         return
       }
 
-      toaster.create({
-        title: 'Thành công',
-        description: 'Đã đặt lịch hẹn lái thử thành công',
-        type: 'success'
+      toast.success('Đã đặt lịch hẹn lái thử thành công', {
+        title: 'Thành công'
       })
 
       navigate('/products')
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
-      })
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại')
     } finally {
       setIsSubmitting(false)
     }

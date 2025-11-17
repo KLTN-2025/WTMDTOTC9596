@@ -6,12 +6,13 @@ export const useMasterData = () => {
   const dispatch = useAppDispatch()
   const {
     locations,
-    categories,
     brands,
     colors,
     fuels,
     transmissions,
     bodyStyles,
+    versions,
+    models,
     loading,
     error,
     initialized
@@ -25,12 +26,13 @@ export const useMasterData = () => {
 
   return {
     locations,
-    categories,
     brands,
     colors,
     fuels,
     transmissions,
     bodyStyles,
+    versions,
+    models,
     loading,
     error,
     initialized

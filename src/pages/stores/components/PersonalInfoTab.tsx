@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { updateProfile, type UpdateProfileData } from '@/api/profile'
 import { useAuth } from '@/hooks/useAuth'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -25,6 +25,7 @@ type PersonalFormData = z.infer<typeof personalSchema>
 export function PersonalInfoTab() {
   const { user, profile, isLoading: authLoading } = useAuth()
   const dispatch = useAppDispatch()
+  const toast = useToast()
   const [isSaving, setIsSaving] = useState(false)
   const [joinDate, setJoinDate] = useState<string | null>(null)
 
@@ -68,10 +69,8 @@ export function PersonalInfoTab() {
       const { data, error } = await updateProfile(updateData as UpdateProfileData, user)
 
       if (error) {
-        toaster.create({
-          title: 'Cập nhật thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi cập nhật',
-          type: 'error'
+        toast.error(error.message || 'Đã xảy ra lỗi khi cập nhật', {
+          title: 'Cập nhật thất bại'
         })
         return
       }
@@ -90,16 +89,12 @@ export function PersonalInfoTab() {
         dispatch(fetchUserData(user))
       }
 
-      toaster.create({
-        title: 'Cập nhật thành công',
-        description: 'Thông tin của bạn đã được cập nhật',
-        type: 'success'
+      toast.success('Thông tin của bạn đã được cập nhật', {
+        title: 'Cập nhật thành công'
       })
     } catch {
-      toaster.create({
-        title: 'Lỗi cập nhật',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi cập nhật'
       })
     } finally {
       setIsSaving(false)

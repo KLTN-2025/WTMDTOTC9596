@@ -28,7 +28,7 @@ import {
 import { FaCar, FaGasPump, FaCog, FaStar } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import {
   getProductById,
   getSimilarProductsBySpecs,
@@ -44,12 +44,15 @@ import type { ProductComment, ReactionType } from '@/types/comments'
 import { formatTimeAgo } from '@/utils/date'
 import { AboutSection } from '@/components/common/AboutSection'
 import { NewCarModelsSection } from '@/components/common/NewCarModelsSection'
+import { AppBreadcrumb } from '@/components/common/Breadcrumb'
 import { CONDITION_TYPE_MAP, QUICK_CHAT_MESSAGES, EMOTION_REACTIONS } from '@/mocks/product-detail'
 import { useAuth } from '@/hooks/useAuth'
+import { PATHS } from '@/configs/paths'
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const { isAuthenticated, user } = useAuth()
+  const toast = useToast()
   const [productData, setProductData] = useState({
     product: null as ProductDetailData | null,
     similarProducts: [] as any[],
@@ -87,7 +90,9 @@ export function ProductDetail() {
         const { data, error } = await getProductById(id)
 
         if (error) {
-          toaster.create({ title: 'Lỗi tải sản phẩm', description: error.message, type: 'error' })
+          toast.error(error.message, {
+            title: 'Lỗi tải sản phẩm'
+          })
           return
         }
 
@@ -176,7 +181,13 @@ export function ProductDetail() {
     <Box bg='#F8FAFC' minH='100vh' py={4}>
       <Container maxW='1200px' px={4} overflow='hidden'>
         <VStack align='stretch' gap={6}>
-          <Breadcrumb productTitle={productData.product?.title || ''} />
+          <AppBreadcrumb
+            items={[
+              { label: 'Trang chủ', path: PATHS.HOME },
+              { label: 'Mua xe', path: PATHS.PRODUCTS },
+              { label: productData.product?.title || '' }
+            ]}
+          />
 
           <Flex gap={6} direction={{ base: 'column', lg: 'row' }} align='flex-start'>
             <Box flex={1} position='relative' maxW='100%' overflow='hidden'>
@@ -494,28 +505,6 @@ export function ProductDetail() {
   )
 }
 
-function Breadcrumb({ productTitle }: { productTitle: string }) {
-  return (
-    <HStack gap={0} fontSize='14px' fontWeight='400' color='#6B7280'>
-      <RouterLink to='/'>
-        <Text fontWeight='600' color='#1B2C5D'>
-          Trang chủ
-        </Text>
-      </RouterLink>
-      <Icon size='md' color='#B6B6B6'>
-        <HiOutlineChevronDown style={{ transform: 'rotate(-90deg)' }} />
-      </Icon>
-      <RouterLink to='/products'>
-        <Text>Mua xe</Text>
-      </RouterLink>
-      <Icon size='md' color='#B6B6B6'>
-        <HiOutlineChevronDown style={{ transform: 'rotate(-90deg)' }} />
-      </Icon>
-      <Text>{productTitle}</Text>
-    </HStack>
-  )
-}
-
 function ImageGallery({
   images,
   selectedImage,
@@ -644,13 +633,12 @@ function ProductInfoCard({
 }) {
   const [isProcessing, setIsProcessing] = useState(false)
   const { user } = useAuth()
+  const toast = useToast()
 
   const handleToggleFavorite = async () => {
     if (!isLoggedIn) {
-      toaster.create({
-        title: 'Vui lòng đăng nhập',
-        description: 'Bạn cần đăng nhập để thêm sản phẩm vào yêu thích',
-        type: 'warning'
+      toast.warning('Bạn cần đăng nhập để thêm sản phẩm vào yêu thích', {
+        title: 'Vui lòng đăng nhập'
       })
       return
     }
@@ -662,41 +650,31 @@ function ProductInfoCard({
       if (isFavorite && favoriteId) {
         const { error } = await removeFavoriteByProductId(product.id, user)
         if (error) {
-          toaster.create({
-            title: 'Lỗi',
-            description: error.message || 'Không thể bỏ thích sản phẩm',
-            type: 'error'
+          toast.error(error.message || 'Không thể bỏ thích sản phẩm', {
+            title: 'Lỗi'
           })
           return
         }
-        toaster.create({
-          title: 'Đã bỏ thích',
-          description: 'Sản phẩm đã được xóa khỏi danh sách yêu thích',
-          type: 'success'
+        toast.success('Sản phẩm đã được xóa khỏi danh sách yêu thích', {
+          title: 'Đã bỏ thích'
         })
         onFavoriteChange(false, null)
       } else {
         const { data, error } = await addFavorite(product.id, user)
         if (error) {
-          toaster.create({
-            title: 'Lỗi',
-            description: error.message || 'Không thể thêm sản phẩm vào yêu thích',
-            type: 'error'
+          toast.error(error.message || 'Không thể thêm sản phẩm vào yêu thích', {
+            title: 'Lỗi'
           })
           return
         }
-        toaster.create({
-          title: 'Đã thêm vào yêu thích',
-          description: 'Sản phẩm đã được thêm vào danh sách yêu thích',
-          type: 'success'
+        toast.success('Sản phẩm đã được thêm vào danh sách yêu thích', {
+          title: 'Đã thêm vào yêu thích'
         })
         onFavoriteChange(true, data?.id || null)
       }
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi'
       })
     } finally {
       setIsProcessing(false)
@@ -970,6 +948,7 @@ function CommentsSection({
   isLoggedIn: boolean
 }) {
   const { user } = useAuth()
+  const toast = useToast()
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -978,10 +957,8 @@ function CommentsSection({
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !isLoggedIn) {
       if (!isLoggedIn) {
-        toaster.create({
-          title: 'Vui lòng đăng nhập',
-          description: 'Bạn cần đăng nhập để bình luận',
-          type: 'warning'
+        toast.warning('Bạn cần đăng nhập để bình luận', {
+          title: 'Vui lòng đăng nhập'
         })
       }
       return
@@ -997,10 +974,8 @@ function CommentsSection({
     )
 
     if (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: error.message || 'Không thể đăng bình luận',
-        type: 'error'
+      toast.error(error.message || 'Không thể đăng bình luận', {
+        title: 'Lỗi'
       })
     } else if (data) {
       setCommentText('')
@@ -1015,10 +990,8 @@ function CommentsSection({
   const handleSubmitReply = async (parentId: string) => {
     if (!replyText.trim() || !isLoggedIn) {
       if (!isLoggedIn) {
-        toaster.create({
-          title: 'Vui lòng đăng nhập',
-          description: 'Bạn cần đăng nhập để trả lời',
-          type: 'warning'
+        toast.warning('Bạn cần đăng nhập để trả lời', {
+          title: 'Vui lòng đăng nhập'
         })
       }
       return
@@ -1035,10 +1008,8 @@ function CommentsSection({
     )
 
     if (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: error.message || 'Không thể đăng trả lời',
-        type: 'error'
+      toast.error(error.message || 'Không thể đăng trả lời', {
+        title: 'Lỗi'
       })
     } else if (data) {
       setReplyText('')
@@ -1054,10 +1025,8 @@ function CommentsSection({
   const handleDeleteComment = async (commentId: string) => {
     const { error } = await deleteComment(commentId, user)
     if (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: error.message || 'Không thể xóa bình luận',
-        type: 'error'
+      toast.error(error.message || 'Không thể xóa bình luận', {
+        title: 'Lỗi'
       })
     } else {
       const { data: updatedComments } = await getProductComments(productId)
@@ -1270,16 +1239,15 @@ function EmotionReactionSection({
   isLoggedIn: boolean
 }) {
   const { user } = useAuth()
+  const toast = useToast()
   const [isProcessing, setIsProcessing] = useState(false)
 
   const emotions = EMOTION_REACTIONS
 
   const handleReactionClick = async (reactionType: ReactionType) => {
     if (!isLoggedIn) {
-      toaster.create({
-        title: 'Vui lòng đăng nhập',
-        description: 'Bạn cần đăng nhập để đánh giá',
-        type: 'warning'
+      toast.warning('Bạn cần đăng nhập để đánh giá', {
+        title: 'Vui lòng đăng nhập'
       })
       return
     }
@@ -1289,10 +1257,8 @@ function EmotionReactionSection({
     const { error } = await setProductReaction(productId, newReaction, user)
 
     if (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: error.message || 'Không thể cập nhật đánh giá',
-        type: 'error'
+      toast.error(error.message || 'Không thể cập nhật đánh giá', {
+        title: 'Lỗi'
       })
     } else {
       const { data: updatedStats } = await getProductReactions(productId, user)

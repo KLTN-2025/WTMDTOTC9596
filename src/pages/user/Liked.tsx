@@ -12,14 +12,14 @@ import {
   Text,
   VStack
 } from '@chakra-ui/react'
-import { Link as RouterLink, useNavigate } from 'react-router'
-import { HiOutlineChevronDown } from 'react-icons/hi2'
+import { useNavigate } from 'react-router'
 import { HiOutlineSearch } from 'react-icons/hi'
 import { HiHeart } from 'react-icons/hi2'
 import { FaCar, FaGasPump, FaCog } from 'react-icons/fa'
 import { useEffect, useMemo, useState } from 'react'
 import { getFavorites, removeFavorite } from '@/api/products'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
+import { AppBreadcrumb } from '@/components/common/Breadcrumb'
 import { formatTimeAgo } from '@/utils/date'
 import { SORT_OPTIONS } from '@/mocks/products'
 import { PATHS } from '@/configs/paths'
@@ -34,7 +34,7 @@ type FavoriteItem = {
   title: string
   price: number
   image: string
-  seller?: {
+  store?: {
     storeName: string
     storeLogo: string | null
   } | null
@@ -51,6 +51,7 @@ type FavoriteItem = {
 export function Liked() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const [items, setItems] = useState<FavoriteItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest')
@@ -61,10 +62,8 @@ export function Liked() {
     try {
       const { data, error } = await getFavorites(user)
       if (error) {
-        toaster.create({
-          title: 'Lỗi tải dữ liệu',
-          description: error.message || 'Không thể tải danh sách yêu thích',
-          type: 'error'
+        toast.error(error.message || 'Không thể tải danh sách yêu thích', {
+          title: 'Lỗi tải dữ liệu'
         })
         setItems([])
         return
@@ -87,26 +86,20 @@ export function Liked() {
     try {
       const { error } = await removeFavorite(favoriteId, user)
       if (error) {
-        toaster.create({
-          title: 'Lỗi',
-          description: error.message || 'Không thể bỏ thích sản phẩm',
-          type: 'error'
+        toast.error(error.message || 'Không thể bỏ thích sản phẩm', {
+          title: 'Lỗi'
         })
         return
       }
 
-      toaster.create({
-        title: 'Đã bỏ thích',
-        description: 'Sản phẩm đã được xóa khỏi danh sách yêu thích',
-        type: 'success'
+      toast.success('Sản phẩm đã được xóa khỏi danh sách yêu thích', {
+        title: 'Đã bỏ thích'
       })
 
       setItems(items.filter(item => item.favoriteId !== favoriteId))
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi'
       })
     }
   }
@@ -140,19 +133,11 @@ export function Liked() {
   return (
     <Box bg='#F8FAFC' minH='100vh'>
       <Container maxW='1200px' px={4} py={6}>
-        <HStack gap={2} mb={4}>
-          <RouterLink to='/'>
-            <Text fontSize='14px' fontWeight='600' color='#1B2C5D'>
-              Trang chủ
-            </Text>
-          </RouterLink>
-          <Icon size='md' color='#B6B6B6'>
-            <HiOutlineChevronDown style={{ transform: 'rotate(-90deg)' }} />
-          </Icon>
-          <Text fontSize='14px' fontWeight='400' color='#6B7280'>
-            Tin đã thích
-          </Text>
-        </HStack>
+        <Box mb={4}>
+          <AppBreadcrumb
+            items={[{ label: 'Trang chủ', path: PATHS.HOME }, { label: 'Tin đã thích' }]}
+          />
+        </Box>
 
         <Flex justify='space-between' align='center' mb={4} wrap='wrap' gap={3}>
           <Text fontSize='20px' fontWeight='700' color='#04113E'>
@@ -350,17 +335,17 @@ export function Liked() {
                         <Box borderTop='1px solid #E5E7EB' pt={2} mt={2}>
                           <Flex justify='space-between' align='center' wrap='wrap' gap={2}>
                             <HStack gap={2}>
-                              {item.seller?.storeLogo && (
+                              {item.store?.storeLogo && (
                                 <Image
-                                  src={item.seller.storeLogo}
-                                  alt={item.seller.storeName}
+                                  src={item.store.storeLogo}
+                                  alt={item.store.storeName}
                                   width='24px'
                                   height='24px'
                                   borderRadius='full'
                                 />
                               )}
                               <Text fontSize='12px' fontWeight='600' color='#1B2C5D'>
-                                {item.seller?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
+                                {item.store?.storeName || DEFAULT_VALUES.NOT_AVAILABLE}
                               </Text>
                             </HStack>
                           </Flex>

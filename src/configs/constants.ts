@@ -7,3 +7,9 @@ export const DEFAULT_VALUES = {
   NEW_CAR_MODELS_LIMIT: 8,
   NEW_CAR_MODELS_DISPLAY_LIMIT: 4
 } as const
+
+export const USER_ROLE = {
+  BUYER: 'buyer',
+  SELLER: 'seller',
+  ADMIN: 'admin'
+} as const

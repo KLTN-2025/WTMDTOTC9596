@@ -13,13 +13,14 @@ import {
   VStack,
   createListCollection
 } from '@chakra-ui/react'
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useDropzone } from 'react-dropzone'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/hooks/useAuth'
-import { getStore, upsertStore, uploadStoreAsset } from '@/api/stores'
+import { upsertStore, uploadStoreAsset } from '@/api/stores'
 import { useNavigate } from 'react-router'
 import { FiCheckCircle } from 'react-icons/fi'
 import { useMasterData } from '@/hooks/useMasterData'
@@ -29,7 +30,6 @@ import { useAppDispatch } from '@/stores/hooks'
 import { fetchUserData } from '@/stores/auth/authSlice'
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
 const isValidUrl = (value: string) => {
   try {
@@ -72,9 +72,10 @@ const storeSchema = z.object({
 type StoreFormData = z.infer<typeof storeSchema>
 
 export function StoreRegistration() {
-  const { user, profile } = useAuth()
+  const { user, profile, store, isLoading: isLoadingAuth } = useAuth()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const toast = useToast()
   const { locations } = useMasterData()
   const locationCollection = useMemo(
     () =>
@@ -86,12 +87,8 @@ export function StoreRegistration() {
       }),
     [locations]
   )
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasStore, setHasStore] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
-  const logoInputRef = useRef<HTMLInputElement>(null)
-  const bannerInputRef = useRef<HTMLInputElement>(null)
 
   const {
     control,
@@ -119,143 +116,164 @@ export function StoreRegistration() {
 
   const watchedLogo = watch('storeLogo')
   const watchedBanner = watch('storeBanner')
+  const hasStore = !!store
 
   useEffect(() => {
-    const loadStore = async () => {
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
+    if (store) {
+      reset({
+        storeName: store.name || '',
+        storeLogo: store.logoUrl || '',
+        storeBanner: store.bannerUrl || '',
+        description: store.description || '',
+        taxCode: store.taxCode || '',
+        address: store.address || '',
+        storePhone: store.contactPhone || '',
+        zalo: store.zalo || '',
+        email: store.contactEmail || '',
+        websiteLink: store.websiteLink || ''
+      })
+    }
+  }, [store, reset])
 
-      setIsLoading(true)
+  const handleLogoUpload = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (!user || acceptedFiles.length === 0) return
+
+      const file = acceptedFiles[0]
+      if (!file) return
+      setIsUploadingLogo(true)
+
       try {
-        const { data, error } = await getStore(user)
+        const { data, error } = await uploadStoreAsset(file, user, 'logo')
 
         if (error) {
-          setIsLoading(false)
+          toast.error(error.message || 'Không thể tải lên hình ảnh', {
+            title: 'Lỗi tải lên'
+          })
           return
         }
 
-        if (data) {
-          setHasStore(true)
-          reset({
-            storeName: data.name || '',
-            storeLogo: data.logoUrl || '',
-            storeBanner: data.bannerUrl || '',
-            description: data.description || '',
-            taxCode: data.taxCode || '',
-            address: data.address || '',
-            storePhone: data.contactPhone || '',
-            zalo: data.zalo || '',
-            email: data.contactEmail || '',
-            websiteLink: data.websiteLink || ''
+        if (data?.url) {
+          setValue('storeLogo', data.url)
+          clearErrors('storeLogo')
+          toast.success('Hình ảnh đã được tải lên', {
+            title: 'Tải lên thành công'
           })
         }
       } catch {
-        // Ignore errors
+        toast.error('Đã xảy ra lỗi khi tải lên hình ảnh')
       } finally {
-        setIsLoading(false)
+        setIsUploadingLogo(false)
       }
-    }
+    },
+    [user, setValue, clearErrors, toast]
+  )
 
-    loadStore()
-  }, [user, reset])
+  const handleBannerUpload = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (!user || acceptedFiles.length === 0) return
 
-  const handleFileUpload = async (file: File, variant: 'logo' | 'banner') => {
-    if (!user) return
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Chỉ chấp nhận file ảnh (JPEG, JPG, PNG, WebP)',
-        type: 'error'
-      })
-      return
-    }
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Kích thước file không được vượt quá 5MB',
-        type: 'error'
-      })
-      return
-    }
-
-    if (variant === 'logo') {
-      setIsUploadingLogo(true)
-    } else {
+      const file = acceptedFiles[0]
+      if (!file) return
       setIsUploadingBanner(true)
-    }
 
-    try {
-      const { data, error } = await uploadStoreAsset(file, variant, user)
+      try {
+        const { data, error } = await uploadStoreAsset(file, user, 'banner')
 
-      if (error) {
-        toaster.create({
-          title: 'Lỗi tải lên',
-          description: error.message || 'Không thể tải lên hình ảnh',
-          type: 'error'
-        })
-        return
-      }
+        if (error) {
+          toast.error(error.message || 'Không thể tải lên hình ảnh', {
+            title: 'Lỗi tải lên'
+          })
+          return
+        }
 
-      if (data?.url) {
-        if (variant === 'logo') {
-          setValue('storeLogo', data.url)
-          clearErrors('storeLogo')
-        } else {
+        if (data?.url) {
           setValue('storeBanner', data.url)
           clearErrors('storeBanner')
+          toast.success('Hình ảnh đã được tải lên', {
+            title: 'Tải lên thành công'
+          })
         }
-        toaster.create({
-          title: 'Tải lên thành công',
-          description: 'Hình ảnh đã được tải lên',
-          type: 'success'
-        })
-      }
-    } catch {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Đã xảy ra lỗi khi tải lên hình ảnh',
-        type: 'error'
-      })
-    } finally {
-      if (variant === 'logo') {
-        setIsUploadingLogo(false)
-      } else {
+      } catch {
+        toast.error('Đã xảy ra lỗi khi tải lên hình ảnh')
+      } finally {
         setIsUploadingBanner(false)
       }
-    }
+    },
+    [user, setValue, clearErrors, toast]
+  )
+
+  const onLogoDropRejected = useCallback(
+    (fileRejections: any[]) => {
+      for (const { file, errors } of fileRejections) {
+        for (const error of errors) {
+          if (error.code === 'file-too-large') {
+            toast.error('Kích thước file không được vượt quá 5MB', {
+              title: 'File quá lớn'
+            })
+          } else if (error.code === 'file-invalid-type') {
+            toast.error('Chỉ chấp nhận file ảnh (JPEG, JPG, PNG, WebP)', {
+              title: 'Định dạng không hợp lệ'
+            })
+          } else {
+            toast.error(`File ${file.name}: ${error.message}`, {
+              title: 'Lỗi file'
+            })
+          }
+        }
+      }
+    },
+    [toast]
+  )
+
+  const onBannerDropRejected = useCallback(
+    (fileRejections: any[]) => {
+      for (const { file, errors } of fileRejections) {
+        for (const error of errors) {
+          if (error.code === 'file-too-large') {
+            toast.error('Kích thước file không được vượt quá 5MB', {
+              title: 'File quá lớn'
+            })
+          } else if (error.code === 'file-invalid-type') {
+            toast.error('Chỉ chấp nhận file ảnh (JPEG, JPG, PNG, WebP)', {
+              title: 'Định dạng không hợp lệ'
+            })
+          } else {
+            toast.error(`File ${file.name}: ${error.message}`, {
+              title: 'Lỗi file'
+            })
+          }
+        }
+      }
+    },
+    [toast]
+  )
+
+  const ACCEPTED_IMAGE_TYPES_OBJ = {
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
+    'image/webp': ['.webp']
   }
 
-  const onLogoFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.target
-    const file = input.files?.[0]
-    if (!file) {
-      return
-    }
-    await handleFileUpload(file, 'logo')
-    input.value = ''
-  }
+  const logoDropzone = useDropzone({
+    onDrop: handleLogoUpload,
+    onDropRejected: onLogoDropRejected,
+    accept: ACCEPTED_IMAGE_TYPES_OBJ,
+    maxSize: MAX_IMAGE_SIZE,
+    maxFiles: 1,
+    multiple: false,
+    disabled: isUploadingLogo
+  })
 
-  const onBannerFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.target
-    const file = input.files?.[0]
-    if (!file) {
-      return
-    }
-    await handleFileUpload(file, 'banner')
-    input.value = ''
-  }
-
-  const triggerFileDialog = (variant: 'logo' | 'banner') => {
-    if (variant === 'logo') {
-      logoInputRef.current?.click()
-    } else {
-      bannerInputRef.current?.click()
-    }
-  }
+  const bannerDropzone = useDropzone({
+    onDrop: handleBannerUpload,
+    onDropRejected: onBannerDropRejected,
+    accept: ACCEPTED_IMAGE_TYPES_OBJ,
+    maxSize: MAX_IMAGE_SIZE,
+    maxFiles: 1,
+    multiple: false,
+    disabled: isUploadingBanner
+  })
 
   const onSubmit = async (formData: StoreFormData) => {
     if (!user) return
@@ -292,10 +310,8 @@ export function StoreRegistration() {
       user
     )
     if (error) {
-      toaster.create({
-        title: 'Đăng ký thất bại',
-        description: error.message || 'Không thể lưu thông tin cửa hàng',
-        type: 'error'
+      toast.error(error.message || 'Không thể lưu thông tin cửa hàng', {
+        title: 'Đăng ký thất bại'
       })
       return
     }
@@ -307,25 +323,21 @@ export function StoreRegistration() {
         .eq('id', user.id)
 
       if (roleError) {
-        toaster.create({
-          title: 'Cảnh báo',
-          description: 'Cửa hàng đã được tạo nhưng không thể cập nhật vai trò',
-          type: 'warning'
+        toast.warning('Cửa hàng đã được tạo nhưng không thể cập nhật vai trò', {
+          title: 'Cảnh báo'
         })
       } else {
         dispatch(fetchUserData(user))
       }
     }
 
-    toaster.create({
-      title: 'Đăng ký thành công',
-      description: 'Thông tin cửa hàng đã được lưu',
-      type: 'success'
+    toast.success('Thông tin cửa hàng đã được lưu', {
+      title: 'Đăng ký thành công'
     })
-    setHasStore(true)
+    dispatch(fetchUserData(user))
   }
 
-  if (isLoading) {
+  if (isLoadingAuth) {
     return (
       <Box bg='#F8FAFC' minH='calc(100vh - 200px)' py={8}>
         <Box maxW='1200px' mx='auto' px={4}>
@@ -436,21 +448,42 @@ export function StoreRegistration() {
                           />
                         </Box>
                       )}
-                      <input
-                        ref={logoInputRef}
-                        type='file'
-                        accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                        style={{ display: 'none' }}
-                        onChange={onLogoFileChange}
-                      />
-                      <Button
-                        type='button'
-                        variant='outline'
-                        onClick={() => triggerFileDialog('logo')}
-                        loading={isUploadingLogo}
+                      <Box
+                        {...logoDropzone.getRootProps()}
+                        borderRadius='8px'
+                        border='2px dashed'
+                        borderColor={logoDropzone.isDragActive ? '#204ED3' : '#E5E5E5'}
+                        bg={logoDropzone.isDragActive ? '#F0F4FF' : '#F5F5F5'}
+                        p={4}
+                        textAlign='center'
+                        cursor='pointer'
+                        transition='all 0.2s'
+                        _hover={{
+                          borderColor: '#204ED3',
+                          bg: '#F0F4FF'
+                        }}
                       >
-                        {watchedLogo ? 'Thay đổi logo' : 'Tải lên logo'}
-                      </Button>
+                        <input {...logoDropzone.getInputProps()} />
+                        <VStack gap={2}>
+                          <Text fontSize='14px' color='#6B7280'>
+                            {logoDropzone.isDragActive
+                              ? 'Thả file vào đây'
+                              : watchedLogo
+                                ? 'Kéo thả hoặc click để thay đổi logo'
+                                : 'Kéo thả hoặc click để tải lên logo'}
+                          </Text>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={e => e.stopPropagation()}
+                            loading={isUploadingLogo}
+                            disabled={isUploadingLogo}
+                          >
+                            {watchedLogo ? 'Thay đổi logo' : 'Chọn file'}
+                          </Button>
+                        </VStack>
+                      </Box>
                     </VStack>
                     {errors.storeLogo && (
                       <Field.ErrorText>{errors.storeLogo.message}</Field.ErrorText>
@@ -477,21 +510,42 @@ export function StoreRegistration() {
                           />
                         </Box>
                       )}
-                      <input
-                        ref={bannerInputRef}
-                        type='file'
-                        accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                        style={{ display: 'none' }}
-                        onChange={onBannerFileChange}
-                      />
-                      <Button
-                        type='button'
-                        variant='outline'
-                        onClick={() => triggerFileDialog('banner')}
-                        loading={isUploadingBanner}
+                      <Box
+                        {...bannerDropzone.getRootProps()}
+                        borderRadius='8px'
+                        border='2px dashed'
+                        borderColor={bannerDropzone.isDragActive ? '#204ED3' : '#E5E5E5'}
+                        bg={bannerDropzone.isDragActive ? '#F0F4FF' : '#F5F5F5'}
+                        p={4}
+                        textAlign='center'
+                        cursor='pointer'
+                        transition='all 0.2s'
+                        _hover={{
+                          borderColor: '#204ED3',
+                          bg: '#F0F4FF'
+                        }}
                       >
-                        {watchedBanner ? 'Thay đổi banner' : 'Tải lên banner'}
-                      </Button>
+                        <input {...bannerDropzone.getInputProps()} />
+                        <VStack gap={2}>
+                          <Text fontSize='14px' color='#6B7280'>
+                            {bannerDropzone.isDragActive
+                              ? 'Thả file vào đây'
+                              : watchedBanner
+                                ? 'Kéo thả hoặc click để thay đổi banner'
+                                : 'Kéo thả hoặc click để tải lên banner'}
+                          </Text>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={e => e.stopPropagation()}
+                            loading={isUploadingBanner}
+                            disabled={isUploadingBanner}
+                          >
+                            {watchedBanner ? 'Thay đổi banner' : 'Chọn file'}
+                          </Button>
+                        </VStack>
+                      </Box>
                     </VStack>
                     {errors.storeBanner && (
                       <Field.ErrorText>{errors.storeBanner.message}</Field.ErrorText>

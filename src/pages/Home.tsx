@@ -30,7 +30,6 @@ import {
 import { AboutSection } from '@/components/common/AboutSection'
 import { NewCarModelsSection } from '@/components/common/NewCarModelsSection'
 import { useEffect, useState } from 'react'
-import { toaster } from '@/components/ui/toaster'
 import { getRecentProducts } from '@/api/products'
 import type { Brand, Product } from '@/types/products'
 import { useMasterData } from '@/hooks/useMasterData'
@@ -47,6 +46,7 @@ import { Link as RouterLink, useNavigate } from 'react-router'
 import background from '@/assets/images/image.png'
 import { PATHS } from '@/configs/paths'
 import { DEFAULT_VALUES } from '@/configs/constants'
+import { useToast } from '@/hooks/useToast'
 
 const searchSchema = z.object({ q: z.string().trim().max(200).optional().or(z.literal('')) })
 
@@ -70,6 +70,7 @@ const buildProductsPath = (params?: {
 
 export function Home() {
   const navigate = useNavigate()
+  const toast = useToast()
   const { brands: masterBrands, locations: masterLocations } = useMasterData()
   const [recentProducts, setRecentProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -99,7 +100,7 @@ export function Home() {
       try {
         const { data, error, count } = await getRecentProducts(DEFAULT_VALUES.RECENT_PRODUCTS_LIMIT)
         if (error) {
-          toaster.create({ title: 'Lỗi tải sản phẩm', description: error.message, type: 'error' })
+          toast.error(error.message, { title: 'Lỗi tải sản phẩm' })
           return
         }
         setRecentProducts(

@@ -596,7 +596,7 @@ export const checkFavorite = async (productId: string, user: User | null) => {
     .select('id')
     .eq('user_id', user.id)
     .eq('product_id', productId)
-    .single()
+    .maybeSingle()
 
   if (error && error.code !== 'PGRST116') {
     return { data: null, error }

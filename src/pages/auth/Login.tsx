@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router'
 import { FaFacebook, FaGoogle } from 'react-icons/fa'
 import { PasswordInput } from '@/components/ui/password-input'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { login } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
@@ -30,6 +30,7 @@ interface LoginFormData {
 export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
+  const toast = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const {
     register,
@@ -43,28 +44,22 @@ export function Login() {
       const { data: authData, error } = await login(data)
 
       if (error) {
-        toaster.create({
-          title: 'Đăng nhập thất bại',
-          description: error.message || 'Số điện thoại hoặc mật khẩu không đúng',
-          type: 'error'
+        toast.error(error.message || 'Số điện thoại hoặc mật khẩu không đúng', {
+          title: 'Đăng nhập thất bại'
         })
         return
       }
 
       if (authData?.user) {
-        toaster.create({
-          title: 'Đăng nhập thành công',
-          description: 'Chào mừng bạn quay trở lại',
-          type: 'success'
+        toast.success('Chào mừng bạn quay trở lại', {
+          title: 'Đăng nhập thành công'
         })
         const from = (location.state as { from?: Location })?.from?.pathname || '/'
         navigate(from, { replace: true })
       }
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi đăng nhập',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi đăng nhập'
       })
     } finally {
       setIsLoading(false)

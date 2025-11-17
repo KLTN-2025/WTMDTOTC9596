@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/hooks/useAuth'
 import { upsertStore, uploadStoreAsset } from '@/api/stores'
 import { PATHS } from '@/configs/paths'
@@ -45,6 +45,7 @@ type StoreFormData = z.infer<typeof storeSchema>
 export function StoreInfoTab() {
   const { user, store, isLoading: authLoading } = useAuth()
   const dispatch = useAppDispatch()
+  const toast = useToast()
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
@@ -101,10 +102,8 @@ export function StoreInfoTab() {
   const handleUpload =
     (type: 'avatar' | 'banner') => async (event: React.ChangeEvent<HTMLInputElement>) => {
       if (!user) {
-        toaster.create({
-          title: 'Lỗi',
-          description: 'Bạn cần đăng nhập để tải ảnh',
-          type: 'error'
+        toast.error('Bạn cần đăng nhập để tải ảnh', {
+          title: 'Lỗi'
         })
         return
       }
@@ -121,18 +120,14 @@ export function StoreInfoTab() {
       try {
         const { data, error } = await uploadStoreAsset(file, user, isAvatar ? 'logo' : 'banner')
         if (error || !data) {
-          toaster.create({
-            title: 'Tải ảnh thất bại',
-            description: error?.message || 'Không thể tải ảnh, vui lòng thử lại',
-            type: 'error'
+          toast.error(error?.message || 'Không thể tải ảnh, vui lòng thử lại', {
+            title: 'Tải ảnh thất bại'
           })
         } else {
           const key = isAvatar ? 'avatarUrl' : 'bannerUrl'
           setValue(key, data.url, { shouldDirty: true, shouldTouch: true })
-          toaster.create({
-            title: 'Tải ảnh thành công',
-            description: isAvatar ? 'Ảnh đại diện đã được cập nhật' : 'Banner đã được cập nhật',
-            type: 'success'
+          toast.success(isAvatar ? 'Ảnh đại diện đã được cập nhật' : 'Banner đã được cập nhật', {
+            title: 'Tải ảnh thành công'
           })
         }
       } finally {
@@ -147,10 +142,8 @@ export function StoreInfoTab() {
 
   const onSubmit = async (data: StoreFormData) => {
     if (!user) {
-      toaster.create({
-        title: 'Lỗi',
-        description: 'Bạn cần đăng nhập để cập nhật thông tin cửa hàng',
-        type: 'error'
+      toast.error('Bạn cần đăng nhập để cập nhật thông tin cửa hàng', {
+        title: 'Lỗi'
       })
       return
     }
@@ -180,10 +173,8 @@ export function StoreInfoTab() {
       )
 
       if (error) {
-        toaster.create({
-          title: 'Lưu thất bại',
-          description: error.message || 'Không thể lưu thông tin cửa hàng, vui lòng thử lại',
-          type: 'error'
+        toast.error(error.message || 'Không thể lưu thông tin cửa hàng, vui lòng thử lại', {
+          title: 'Lưu thất bại'
         })
         return
       }
@@ -203,16 +194,12 @@ export function StoreInfoTab() {
         dispatch(fetchUserData(user))
       }
 
-      toaster.create({
-        title: 'Lưu thành công',
-        description: 'Thông tin cửa hàng đã được cập nhật',
-        type: 'success'
+      toast.success('Thông tin cửa hàng đã được cập nhật', {
+        title: 'Lưu thành công'
       })
     } catch {
-      toaster.create({
-        title: 'Lưu thất bại',
-        description: 'Không thể lưu thông tin cửa hàng, vui lòng thử lại',
-        type: 'error'
+      toast.error('Không thể lưu thông tin cửa hàng, vui lòng thử lại', {
+        title: 'Lưu thất bại'
       })
     } finally {
       setIsSaving(false)

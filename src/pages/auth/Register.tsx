@@ -15,7 +15,7 @@ import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import { PasswordInput } from '@/components/ui/password-input'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import { register } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
@@ -30,6 +30,7 @@ interface RegisterFormData {
 
 export function Register() {
   const navigate = useNavigate()
+  const toast = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const {
     register: registerField,
@@ -48,27 +49,21 @@ export function Register() {
       const { data: authData, error } = await register(formData)
 
       if (error) {
-        toaster.create({
-          title: 'Đăng ký thất bại',
-          description: error.message || 'Đã xảy ra lỗi khi đăng ký',
-          type: 'error'
+        toast.error(error.message || 'Đã xảy ra lỗi khi đăng ký', {
+          title: 'Đăng ký thất bại'
         })
         return
       }
 
       if (authData?.user) {
-        toaster.create({
-          title: 'Đăng ký thành công',
-          description: 'Tài khoản của bạn đã được tạo thành công',
-          type: 'success'
+        toast.success('Tài khoản của bạn đã được tạo thành công', {
+          title: 'Đăng ký thành công'
         })
         navigate('/login')
       }
     } catch (error) {
-      toaster.create({
-        title: 'Lỗi đăng ký',
-        description: 'Đã xảy ra lỗi, vui lòng thử lại',
-        type: 'error'
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
+        title: 'Lỗi đăng ký'
       })
     } finally {
       setIsLoading(false)

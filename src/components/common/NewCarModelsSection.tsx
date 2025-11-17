@@ -13,7 +13,7 @@ import {
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { getNewCarModels } from '@/api/products'
-import { toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
 import type { NewCarModel } from '@/types/products'
 import { DEFAULT_VALUES } from '@/configs/constants'
 import { PATHS } from '@/configs/paths'
@@ -30,6 +30,7 @@ const buildProductsPath = (params?: { status?: string }) => {
 
 export function NewCarModelsSection() {
   const navigate = useNavigate()
+  const toast = useToast()
   const { bodyStyles: masterBodyStyles } = useMasterData()
   const [newCarModels, setNewCarModels] = useState<NewCarModel[]>([])
   const [selectedTab, setSelectedTab] = useState('all')
@@ -64,10 +65,8 @@ export function NewCarModelsSection() {
         )
 
         if (error) {
-          toaster.create({
-            title: 'Lỗi tải dòng xe mới',
-            description: error.message,
-            type: 'error'
+          toast.error(error.message, {
+            title: 'Lỗi tải dòng xe mới'
           })
           return
         }
@@ -128,10 +127,8 @@ export function NewCarModelsSection() {
 
         setNewCarModels(models.slice(0, DEFAULT_VALUES.NEW_CAR_MODELS_DISPLAY_LIMIT))
       } catch (error) {
-        toaster.create({
-          title: 'Lỗi tải dòng xe mới',
-          description: 'Đã xảy ra lỗi',
-          type: 'error'
+        toast.error('Đã xảy ra lỗi', {
+          title: 'Lỗi tải dòng xe mới'
         })
       }
     }
