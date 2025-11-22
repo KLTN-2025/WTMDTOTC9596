@@ -9,27 +9,22 @@ import {
   Icon,
   Image,
   Input,
-  Portal,
-  Select,
+  SimpleGrid,
   Spinner,
   Text,
-  VStack,
-  createListCollection
+  VStack
 } from '@chakra-ui/react'
-import { Link as RouterLink } from 'react-router'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  HiOutlinePencilSquare,
-  HiOutlineEyeSlash,
-  HiOutlineTrash,
-  HiOutlineCheckCircle
-} from 'react-icons/hi2'
+import { HiOutlinePencilSquare, HiOutlineTrash, HiOutlineCheckCircle } from 'react-icons/hi2'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { AppBreadcrumb } from '@/components/common/Breadcrumb'
+import { SortSelect } from '@/components/common/SortSelect'
+import { PaginationControls } from '@/components/common/PaginationControls'
 import {
   deleteStoreProduct,
   getStoreProductCounts,
@@ -39,6 +34,8 @@ import {
 import type { StoreProduct, StoreProductCounts } from '@/types/products'
 import type { StoreProductsFilters } from '@/api/products'
 import { PATHS } from '@/configs/paths'
+import { getFirstImage } from '@/utils/media'
+import { CurrencyFormat } from '@/components/ui/currency-format'
 
 const filtersSchema = z.object({
   sortBy: z.enum(['updated_desc', 'price_asc', 'price_desc']),
@@ -78,15 +75,14 @@ const LISTING_TABS: Array<{ key: ListingTab; label: string }> = [
   { key: 'rejected', label: 'Bị từ chối' }
 ]
 
-const SORT_COLLECTION = createListCollection({
-  items: [
-    { label: 'Mới cập nhật', value: 'updated_desc' },
-    { label: 'Giá tăng dần', value: 'price_asc' },
-    { label: 'Giá giảm dần', value: 'price_desc' }
-  ]
-})
+const MANAGE_LISTING_SORT_OPTIONS = [
+  { label: 'Mới cập nhật', value: 'updated_desc' },
+  { label: 'Giá tăng dần', value: 'price_asc' },
+  { label: 'Giá giảm dần', value: 'price_desc' }
+] as const
 
 export function ManageListings() {
+  const navigate = useNavigate()
   const { user, store, isLoading: isLoadingAuth } = useAuth()
   const toast = useToast()
   const storeId = store?.id ?? null
@@ -121,18 +117,6 @@ export function ManageListings() {
       rejected: counts?.rejected ?? 0
     }
   }, [counts, totalItems])
-
-  const totalPages = useMemo(() => {
-    if (totalItems === 0) {
-      return 1
-    }
-    return Math.max(1, Math.ceil(totalItems / pageSize))
-  }, [totalItems, pageSize])
-
-  const pages = useMemo(
-    () => Array.from({ length: totalPages }, (_, index) => index + 1),
-    [totalPages]
-  )
 
   const refreshCounts = useCallback(async () => {
     if (!storeId) {
@@ -214,7 +198,6 @@ export function ManageListings() {
     setPage(1)
   })
 
-  const formatCurrency = useMemo(() => new Intl.NumberFormat('vi-VN'), [])
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat('vi-VN', {
@@ -246,34 +229,8 @@ export function ManageListings() {
     setPage(1)
   }
 
-  const handleToggleVisibility = async (product: StoreProduct) => {
-    if (!storeId || !user) {
-      return
-    }
-    if (product.status === 'sold' || product.status === 'rejected') {
-      return
-    }
-    const nextStatus: StoreProduct['status'] =
-      product.status === 'available' ? 'pending' : 'available'
-    setActionLoadingId(product.id)
-    const { error } = await updateStoreProductStatus(product.id, storeId, nextStatus, user)
-    if (error) {
-      toast.error(error.message || 'Không thể cập nhật trạng thái tin', {
-        title: 'Lỗi cập nhật trạng thái'
-      })
-    } else {
-      toast.success(
-        nextStatus === 'available'
-          ? 'Tin đã hiển thị trở lại'
-          : 'Tin đã chuyển sang trạng thái chờ duyệt',
-        {
-          title: 'Cập nhật trạng thái'
-        }
-      )
-      await refreshListings()
-      await refreshCounts()
-    }
-    setActionLoadingId(null)
+  const handleEdit = (productId: string) => {
+    navigate(`${PATHS.SELL}?product-id=${productId}`)
   }
 
   const handleMarkSold = async (product: StoreProduct) => {
@@ -320,6 +277,10 @@ export function ManageListings() {
     setActionLoadingId(null)
   }
 
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage)
+  }, [])
+
   if (isLoadingAuth) {
     return (
       <Box bg='#F8FAFC' minH='100vh'>
@@ -327,42 +288,6 @@ export function ManageListings() {
           <Flex justify='center'>
             <Spinner size='lg' color='#204ED3' />
           </Flex>
-        </Container>
-      </Box>
-    )
-  }
-
-  if (!user) {
-    return (
-      <Box bg='#F8FAFC' minH='100vh' py={10}>
-        <Container maxW='1200px' px={4}>
-          <Card.Root
-            bg='white'
-            borderRadius='16px'
-            p={10}
-            textAlign='center'
-            className='rounded-2xl'
-          >
-            <VStack gap={4}>
-              <Text fontSize='18px' fontWeight='700' color='#04113E'>
-                Bạn cần đăng nhập để xem tin đã đăng
-              </Text>
-              <RouterLink to={PATHS.LOGIN}>
-                <Button
-                  bg='#204ED3'
-                  color='white'
-                  borderRadius='6px'
-                  px={6}
-                  py={3}
-                  fontWeight='600'
-                  fontSize='14px'
-                  className='rounded-md px-6 py-3 font-semibold text-sm'
-                >
-                  Đăng nhập
-                </Button>
-              </RouterLink>
-            </VStack>
-          </Card.Root>
         </Container>
       </Box>
     )
@@ -475,35 +400,15 @@ export function ManageListings() {
                   control={control}
                   name='sortBy'
                   render={({ field }) => (
-                    <Select.Root
-                      collection={SORT_COLLECTION}
-                      value={field.value ? [field.value] : []}
-                      onValueChange={({ value }) => field.onChange(value[0] ?? 'updated_desc')}
-                      onInteractOutside={() => field.onBlur()}
+                    <SortSelect
+                      value={field.value}
+                      onChange={value => field.onChange(value || 'updated_desc')}
+                      options={MANAGE_LISTING_SORT_OPTIONS}
                       size='sm'
-                    >
-                      <Select.HiddenSelect />
-                      <Select.Control>
-                        <Select.Trigger minW='140px' className='min-w-[140px]'>
-                          <Select.ValueText placeholder='Chọn sắp xếp' />
-                        </Select.Trigger>
-                        <Select.IndicatorGroup>
-                          <Select.Indicator />
-                        </Select.IndicatorGroup>
-                      </Select.Control>
-                      <Portal>
-                        <Select.Positioner>
-                          <Select.Content>
-                            {SORT_COLLECTION.items.map(item => (
-                              <Select.Item item={item} key={item.value}>
-                                {item.label}
-                                <Select.ItemIndicator />
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Portal>
-                    </Select.Root>
+                      minW='140px'
+                      triggerClassName='min-w-[140px]'
+                      onBlur={field.onBlur}
+                    />
                   )}
                 />
               </HStack>
@@ -591,189 +496,159 @@ export function ManageListings() {
             </Card.Root>
           )}
 
-          {listings.map(item => {
-            const cover = item.mediaUrls[0] ?? 'https://via.placeholder.com/250x231'
-            const isActionLoading = actionLoadingId === item.id
-            return (
-              <Card.Root
-                key={item.id}
-                bg='white'
-                borderRadius='14px'
-                overflow='hidden'
-                className='rounded-xl transition-shadow hover:shadow-lg'
-              >
-                <Flex direction={{ base: 'column', md: 'row' }}>
-                  <Box
-                    width={{ base: '100%', md: '200px' }}
-                    height={{ base: '160px', md: '180px' }}
-                    position='relative'
-                    flexShrink={0}
+          {listings.length > 0 && (
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+              {listings.map(item => {
+                const cover = getFirstImage(item.mediaUrls) ?? 'https://via.placeholder.com/250x231'
+                const isActionLoading = actionLoadingId === item.id
+                return (
+                  <Card.Root
+                    key={item.id}
+                    bg='white'
+                    borderRadius='14px'
+                    overflow='hidden'
+                    height='100%'
+                    className='rounded-xl transition-shadow hover:shadow-lg'
                   >
-                    <Image
-                      src={cover}
-                      alt={item.title}
-                      width='100%'
-                      height='100%'
-                      objectFit='cover'
-                    />
-                    <Badge
-                      position='absolute'
-                      top={3}
-                      left={3}
-                      bg={STATUS_BADGE_COLORS[item.status]}
-                      color='white'
-                      borderRadius='9999px'
-                      px={2.5}
-                      py={0.5}
-                      fontSize='12px'
-                      className='rounded-full px-2.5 py-0.5'
-                    >
-                      {STATUS_LABELS[item.status]}
-                    </Badge>
-                  </Box>
-
-                  <Card.Body p={{ base: 4, md: 4 }} flex={1}>
-                    <VStack align='stretch' gap={2.5}>
-                      <Flex justify='space-between' align='start' gap={2} wrap='wrap'>
-                        <Text
-                          fontSize='15px'
-                          fontWeight='700'
-                          color='#04113E'
-                          textTransform='uppercase'
-                          className='text-[14px] md:text-[15px] font-bold text-[#04113E] uppercase'
-                        >
-                          {item.title}
-                        </Text>
-                        <Text fontSize='12px' color='#6B7280' className='text-xs text-[#6B7280]'>
-                          Cập nhật: {formatUpdatedAt(item.updatedAt)}
-                        </Text>
-                      </Flex>
-                      <HStack gap={2} align='baseline'>
-                        <Text
-                          fontSize='18px'
-                          fontWeight='700'
-                          color='#204ED3'
-                          className='text-[18px] font-bold text-[#204ED3]'
-                        >
-                          {formatCurrency.format(item.price)}
-                        </Text>
-                        <Text
-                          fontSize='13px'
-                          fontWeight='600'
-                          color='#04113E'
-                          className='text-[13px] font-semibold text-[#04113E]'
-                        >
-                          VNĐ
-                        </Text>
-                      </HStack>
-
-                      <Box h='1px' bg='#E5E7EB' />
-
-                      <Flex gap={3} flexWrap='wrap' className='text-xs text-[#6B7280]'>
-                        <Text fontSize='12px' color='#6B7280'>
-                          Lượt xem: 0
-                        </Text>
-                        <Text fontSize='12px' color='#6B7280'>
-                          Liên hệ: 0
-                        </Text>
-                        <Text fontSize='12px' color='#6B7280'>
-                          Cập nhật: {formatUpdatedAt(item.updatedAt)}
-                        </Text>
-                      </Flex>
-
-                      <Box h='1px' bg='#E5E7EB' />
-
-                      <Flex gap={2} flexWrap='wrap'>
-                        <Button
-                          variant='outline'
-                          borderColor='#E5E5E5'
-                          color='#1B2C5D'
-                          borderRadius='6px'
-                          size='sm'
-                          px={3}
-                          py={2}
-                          fontSize='12px'
-                          className='rounded-md px-3 py-2 text-xs'
-                          disabled={isActionLoading}
-                        >
-                          <HStack gap={1.5}>
-                            <Icon boxSize={4}>
-                              <HiOutlinePencilSquare />
-                            </Icon>
-                            <Text fontSize='12px'>Chỉnh sửa</Text>
-                          </HStack>
-                        </Button>
-                        <Button
-                          variant='outline'
-                          borderColor='#E5E5E5'
-                          color='#171717'
-                          borderRadius='6px'
-                          size='sm'
-                          px={3}
-                          py={2}
-                          fontSize='12px'
-                          className='rounded-md px-3 py-2 text-xs'
-                          onClick={() => handleToggleVisibility(item)}
-                          disabled={
-                            isActionLoading || item.status === 'sold' || item.status === 'rejected'
-                          }
-                        >
-                          <HStack gap={1.5}>
-                            <Icon boxSize={4}>
-                              <HiOutlineEyeSlash />
-                            </Icon>
-                            <Text fontSize='12px'>
-                              {item.status === 'available' ? 'Ẩn tin' : 'Hiển thị'}
-                            </Text>
-                          </HStack>
-                        </Button>
-                        <Button
-                          bg='#204ED3'
+                    <Flex direction={{ base: 'column', md: 'row' }} height='100%'>
+                      <Box
+                        width={{ base: '100%', md: '200px' }}
+                        height={{ base: '160px', md: '180px' }}
+                        position='relative'
+                        flexShrink={0}
+                      >
+                        <Image
+                          src={cover}
+                          alt={item.title}
+                          width='100%'
+                          height='100%'
+                          objectFit='cover'
+                        />
+                        <Badge
+                          position='absolute'
+                          top={3}
+                          left={3}
+                          bg={STATUS_BADGE_COLORS[item.status]}
                           color='white'
-                          borderRadius='6px'
-                          size='sm'
-                          px={3}
-                          py={2}
+                          borderRadius='9999px'
+                          px={2.5}
+                          py={0.5}
                           fontSize='12px'
-                          _hover={{ bg: '#1a3fb0' }}
-                          className='rounded-md px-3 py-2 text-xs'
-                          onClick={() => handleMarkSold(item)}
-                          disabled={isActionLoading || item.status === 'sold'}
+                          className='rounded-full px-2.5 py-0.5'
                         >
-                          <HStack gap={1.5}>
-                            <Icon boxSize={4}>
-                              <HiOutlineCheckCircle />
-                            </Icon>
-                            <Text fontSize='12px'>Đánh dấu đã bán</Text>
-                          </HStack>
-                        </Button>
-                        <Button
-                          variant='outline'
-                          borderColor='#E5E5E5'
-                          color='#EF4444'
-                          borderRadius='6px'
-                          size='sm'
-                          px={3}
-                          py={2}
-                          fontSize='12px'
-                          className='rounded-md px-3 py-2 text-xs'
-                          onClick={() => handleDelete(item.id)}
-                          disabled={isActionLoading}
-                        >
-                          <HStack gap={1.5}>
-                            <Icon boxSize={4}>
-                              <HiOutlineTrash />
-                            </Icon>
-                            <Text fontSize='12px'>Xóa tin</Text>
-                          </HStack>
-                        </Button>
-                      </Flex>
-                    </VStack>
-                  </Card.Body>
-                </Flex>
-              </Card.Root>
-            )
-          })}
+                          {STATUS_LABELS[item.status]}
+                        </Badge>
+                      </Box>
+
+                      <Card.Body p={{ base: 4, md: 4 }} flex={1} display='flex'>
+                        <VStack align='stretch' gap={2.5} flex={1}>
+                          <Flex
+                            justify='space-between'
+                            align='start'
+                            gap={2}
+                            wrap='wrap'
+                            flexDirection='column'
+                          >
+                            <RouterLink to={PATHS.PRODUCT_DETAIL(item.id)}>
+                              <Text
+                                fontSize='15px'
+                                fontWeight='700'
+                                color='#04113E'
+                                textTransform='uppercase'
+                                className='text-[14px] md:text-[15px] font-bold text-[#04113E] uppercase hover:text-[#204ED3] cursor-pointer transition-colors'
+                              >
+                                {item.title}
+                              </Text>
+                            </RouterLink>
+                            <Text
+                              fontSize='12px'
+                              color='#6B7280'
+                              className='text-xs text-[#6B7280]'
+                            >
+                              Cập nhật: {formatUpdatedAt(item.updatedAt)}
+                            </Text>
+                          </Flex>
+                          <Text
+                            fontSize='18px'
+                            fontWeight='700'
+                            color='#204ED3'
+                            className='text-[18px] font-bold text-[#204ED3]'
+                          >
+                            <CurrencyFormat value={item.price} />
+                          </Text>
+
+                          <Box h='1px' bg='#E5E7EB' />
+
+                          <Flex gap={1} flexWrap='nowrap' mt='auto'>
+                            <Button
+                              variant='outline'
+                              borderColor='#E5E5E5'
+                              color='#1B2C5D'
+                              borderRadius='6px'
+                              size='sm'
+                              px={3}
+                              py={2}
+                              fontSize='12px'
+                              className='rounded-md px-3 py-2 text-xs'
+                              disabled={isActionLoading}
+                              onClick={() => handleEdit(item.id)}
+                            >
+                              <HStack gap={1.5}>
+                                <Icon boxSize={4}>
+                                  <HiOutlinePencilSquare />
+                                </Icon>
+                                <Text fontSize='12px'>Chỉnh sửa</Text>
+                              </HStack>
+                            </Button>
+                            <Button
+                              bg='#204ED3'
+                              color='white'
+                              borderRadius='6px'
+                              size='sm'
+                              px={3}
+                              py={2}
+                              fontSize='12px'
+                              _hover={{ bg: '#1a3fb0' }}
+                              className='rounded-md px-3 py-2 text-xs'
+                              onClick={() => handleMarkSold(item)}
+                              disabled={isActionLoading || item.status === 'sold'}
+                            >
+                              <HStack gap={1.5}>
+                                <Icon boxSize={4}>
+                                  <HiOutlineCheckCircle />
+                                </Icon>
+                                <Text fontSize='12px'>Đánh dấu đã bán</Text>
+                              </HStack>
+                            </Button>
+                            <Button
+                              variant='outline'
+                              borderColor='#E5E5E5'
+                              color='#EF4444'
+                              borderRadius='6px'
+                              size='sm'
+                              px={3}
+                              py={2}
+                              fontSize='12px'
+                              className='rounded-md px-3 py-2 text-xs'
+                              onClick={() => handleDelete(item.id)}
+                              disabled={isActionLoading}
+                            >
+                              <HStack gap={1.5}>
+                                <Icon boxSize={4}>
+                                  <HiOutlineTrash />
+                                </Icon>
+                                <Text fontSize='12px'>Xóa tin</Text>
+                              </HStack>
+                            </Button>
+                          </Flex>
+                        </VStack>
+                      </Card.Body>
+                    </Flex>
+                  </Card.Root>
+                )
+              })}
+            </SimpleGrid>
+          )}
 
           {hasFetched && listings.length === 0 && !isFetching && !fetchError && (
             <Card.Root bg='white' borderRadius='14px' p={10} textAlign='center'>
@@ -784,56 +659,12 @@ export function ManageListings() {
           )}
 
           {listings.length > 0 && (
-            <Flex justify='center' gap={3} mb={5} className='mb-5'>
-              <Button
-                variant='outline'
-                borderColor='#E5E5E5'
-                color='#04113E'
-                borderRadius='6px'
-                px={4}
-                py={2}
-                fontSize='13px'
-                fontWeight='500'
-                className='rounded-md px-4 py-2 text-xs md:text-sm font-medium'
-                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                disabled={page === 1}
-              >
-                ←
-              </Button>
-              {pages.map(p => (
-                <Button
-                  key={p}
-                  variant={p === page ? undefined : 'outline'}
-                  bg={p === page ? '#204ED3' : undefined}
-                  color={p === page ? 'white' : '#04113E'}
-                  borderColor='#E5E5E5'
-                  borderRadius='6px'
-                  px={4}
-                  py={2}
-                  fontSize='13px'
-                  fontWeight='500'
-                  className={`rounded-md px-4 py-2 text-xs md:text-sm font-medium ${p === page ? 'bg-[#204ED3] text-white' : ''}`}
-                  onClick={() => setPage(p)}
-                >
-                  {p}
-                </Button>
-              ))}
-              <Button
-                variant='outline'
-                borderColor='#E5E5E5'
-                color='#04113E'
-                borderRadius='6px'
-                px={4}
-                py={2}
-                fontSize='13px'
-                fontWeight='500'
-                className='rounded-md px-4 py-2 text-xs md:text-sm font-medium'
-                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={page === totalPages}
-              >
-                →
-              </Button>
-            </Flex>
+            <PaginationControls
+              totalCount={totalItems}
+              pageSize={pageSize}
+              currentPage={page}
+              onPageChange={handlePageChange}
+            />
           )}
         </VStack>
       </Container>

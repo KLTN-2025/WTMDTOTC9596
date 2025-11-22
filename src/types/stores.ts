@@ -19,3 +19,8 @@ export type Store = {
   updatedAt: string
 }
 
+export type StoreStats = {
+  selling: number
+  sold: number
+  favorites: number
+}

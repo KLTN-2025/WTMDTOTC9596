@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { Breadcrumb, Icon, Text } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router'
 import { HiOutlineChevronDown } from 'react-icons/hi2'
@@ -21,28 +22,30 @@ export function AppBreadcrumb({ items }: BreadcrumbProps) {
           const isActive = item.isActive ?? isLast
 
           return (
-            <Breadcrumb.Item key={index}>
-              {item.path && !isActive ? (
-                <Breadcrumb.Link asChild>
-                  <RouterLink
-                    to={item.path}
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: index === 0 ? '600' : '400',
-                      color: index === 0 ? '#1B2C5D' : '#6B7280',
-                      textDecoration: 'none'
-                    }}
-                  >
-                    {item.label}
-                  </RouterLink>
-                </Breadcrumb.Link>
-              ) : (
-                <Breadcrumb.CurrentLink>
-                  <Text fontSize='14px' fontWeight='400' color='#6B7280'>
-                    {item.label}
-                  </Text>
-                </Breadcrumb.CurrentLink>
-              )}
+            <Fragment key={`${item.label}-${index}`}>
+              <Breadcrumb.Item>
+                {item.path && !isActive ? (
+                  <Breadcrumb.Link asChild>
+                    <RouterLink
+                      to={item.path}
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: index === 0 ? '600' : '400',
+                        color: index === 0 ? '#1B2C5D' : '#6B7280',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      {item.label}
+                    </RouterLink>
+                  </Breadcrumb.Link>
+                ) : (
+                  <Breadcrumb.CurrentLink>
+                    <Text fontSize='14px' fontWeight='400' color='#6B7280'>
+                      {item.label}
+                    </Text>
+                  </Breadcrumb.CurrentLink>
+                )}
+              </Breadcrumb.Item>
               {!isLast && (
                 <Breadcrumb.Separator>
                   <Icon size='md' color='#B6B6B6'>
@@ -50,7 +53,7 @@ export function AppBreadcrumb({ items }: BreadcrumbProps) {
                   </Icon>
                 </Breadcrumb.Separator>
               )}
-            </Breadcrumb.Item>
+            </Fragment>
           )
         })}
       </Breadcrumb.List>

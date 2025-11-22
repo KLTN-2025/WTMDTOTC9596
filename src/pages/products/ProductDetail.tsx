@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Badge,
   Box,
   Button,
@@ -27,6 +28,7 @@ import {
 } from 'react-icons/hi2'
 import { FaCar, FaGasPump, FaCog, FaStar } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
+import ReactPlayer from 'react-player'
 import { useParams, useNavigate } from 'react-router'
 import { useToast } from '@/hooks/useToast'
 import {
@@ -37,17 +39,27 @@ import {
   removeFavoriteByProductId,
   checkFavorite
 } from '@/api/products'
+import { getStoreStats } from '@/api/stores'
 import { getProductComments, createComment, deleteComment } from '@/api/comments'
 import { getProductReactions, setProductReaction } from '@/api/reactions'
 import type { ProductDetailData } from '@/types/products'
 import type { ProductComment, ReactionType } from '@/types/comments'
 import { formatTimeAgo } from '@/utils/date'
+import { isVideo } from '@/utils/media'
 import { AboutSection } from '@/components/common/AboutSection'
 import { NewCarModelsSection } from '@/components/common/NewCarModelsSection'
 import { AppBreadcrumb } from '@/components/common/Breadcrumb'
 import { CONDITION_TYPE_MAP, QUICK_CHAT_MESSAGES, EMOTION_REACTIONS } from '@/mocks/product-detail'
 import { useAuth } from '@/hooks/useAuth'
 import { PATHS } from '@/configs/paths'
+import { CurrencyFormat } from '@/components/ui/currency-format'
+import type { StoreStats } from '@/types/stores'
+
+type DetailItem = {
+  label: string
+  value: string
+  isLink?: boolean
+}
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
@@ -81,6 +93,8 @@ export function ProductDetail() {
       userReaction: null as ReactionType | null
     }
   })
+  const [storeStats, setStoreStats] = useState<StoreStats | null>(null)
+  const storeId = productData.product?.storeId || null
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -162,6 +176,19 @@ export function ProductDetail() {
     loadReactions()
   }, [id])
 
+  useEffect(() => {
+    const loadStoreStats = async () => {
+      if (!storeId) {
+        setStoreStats(null)
+        return
+      }
+      const { data } = await getStoreStats(storeId)
+      setStoreStats(data ?? null)
+    }
+
+    loadStoreStats()
+  }, [storeId])
+
   if (uiState.isLoading || !productData.product) {
     return (
       <Box bg='#F8FAFC' minH='100vh' py={4}>
@@ -176,6 +203,99 @@ export function ProductDetail() {
     productData.product.mediaUrls && productData.product.mediaUrls.length > 0
       ? productData.product.mediaUrls
       : []
+
+  const mileageDisplay = productData.product.mileageKm
+    ? `${productData.product.mileageKm.toLocaleString('vi-VN')} km`
+    : 'N/A'
+  const conditionDetails: DetailItem[] = [
+    { label: 'Số Km đã đi', value: mileageDisplay },
+    { label: 'Xuất xứ', value: productData.product.origin || 'N/A' },
+    {
+      label: 'Tình trạng',
+      value:
+        CONDITION_TYPE_MAP[productData.product.conditionType] ||
+        productData.product.conditionType ||
+        'N/A'
+    },
+    { label: 'Chính sách bảo hành', value: productData.product.warrantyPolicy || 'N/A' },
+    { label: 'Khu vực', value: productData.product.locations?.name || 'N/A' }
+  ]
+
+  const technicalDetails: DetailItem[] = [
+    { label: 'Hãng', value: productData.product.brands?.name || 'N/A', isLink: true },
+    { label: 'Dòng xe', value: productData.product.models?.name || 'N/A', isLink: true },
+    { label: 'Năm sản xuất', value: productData.product.yearManufactured || 'N/A' },
+    { label: 'Phiên bản xe', value: productData.product.versions?.name || 'N/A' },
+    { label: 'Hộp số', value: productData.product.transmissions?.name || 'N/A' },
+    { label: 'Nhiên liệu', value: productData.product.fuels?.name || 'N/A' },
+    { label: 'Kiểu dáng', value: productData.product.bodyStyles?.name || 'N/A' },
+    {
+      label: 'Số chỗ',
+      value: productData.product.seats ? `${productData.product.seats} chỗ` : 'N/A'
+    },
+    { label: 'Màu sắc', value: productData.product.colors?.name || 'N/A' },
+    { label: 'Hệ dẫn động', value: productData.product.drive || 'N/A' },
+    { label: 'Công suất động cơ', value: productData.product.power || 'N/A' },
+    { label: 'Momen xoắn', value: productData.product.torque || 'N/A' },
+    { label: 'Dung tích động cơ', value: productData.product.engineCapacity || 'N/A' },
+    { label: 'Nhiên liệu tiêu thụ', value: productData.product.fuelConsumption || 'N/A' },
+    {
+      label: 'Số cửa',
+      value:
+        typeof productData.product.doors === 'number' ? `${productData.product.doors} cửa` : 'N/A'
+    },
+    { label: 'Trọng lượng', value: productData.product.weight || 'N/A' },
+    { label: 'Trọng tải', value: productData.product.payload || 'N/A' },
+    { label: 'Khoảng sáng gầm xe', value: productData.product.groundClearance || 'N/A' }
+  ]
+
+  const additionalSpecs =
+    Array.isArray(productData.product.specs) && productData.product.specs.length > 0
+      ? productData.product.specs.filter(spec => spec.name && spec.value)
+      : []
+
+  const renderDetailGrid = (items: DetailItem[], keyPrefix: string) => (
+    <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap={6}>
+      {items.map((item, index) => {
+        const key = `${keyPrefix}-${item.label}-${index}`
+        const itemContent =
+          item.isLink && item.value !== 'N/A' ? (
+            <RouterLink to={PATHS.PRODUCTS}>
+              <Text
+                fontSize='14px'
+                fontWeight='400'
+                color='#204ED3'
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {item.value}
+              </Text>
+            </RouterLink>
+          ) : (
+            <Text fontSize='14px' fontWeight='400' color='#04113E'>
+              {item.value}
+            </Text>
+          )
+
+        return (
+          <VStack
+            key={key}
+            align='flex-start'
+            gap={1}
+            borderRight={{
+              base: 'none',
+              lg: (index + 1) % 4 === 0 ? 'none' : '1px solid #E5E5E5'
+            }}
+            pr={{ base: 0, lg: 3 }}
+          >
+            <Text fontSize='14px' fontWeight='400' color='#737373'>
+              {item.label}
+            </Text>
+            {itemContent}
+          </VStack>
+        )
+      })}
+    </SimpleGrid>
+  )
 
   return (
     <Box bg='#F8FAFC' minH='100vh' py={4}>
@@ -245,43 +365,7 @@ export function ProductDetail() {
                       <Text fontSize='16px' fontWeight='500' color='#04113E' mb={3}>
                         Tình trạng xe
                       </Text>
-                      <SimpleGrid columns={4} gap={6} borderRight='1px solid #E5E5E5'>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Số Km đã đi
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.mileageKm
-                              ? `${productData.product?.mileageKm.toLocaleString('vi-VN')} km`
-                              : 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Xuất xứ
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.origin || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Tình trạng
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {CONDITION_TYPE_MAP[productData.product?.conditionType] ||
-                              productData.product?.conditionType}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1}>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Chính sách bảo hành
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.warrantyPolicy || 'N/A'}
-                          </Text>
-                        </VStack>
-                      </SimpleGrid>
+                      {renderDetailGrid(conditionDetails, 'condition')}
                     </Box>
 
                     <Separator />
@@ -290,159 +374,36 @@ export function ProductDetail() {
                       <Text fontSize='16px' fontWeight='500' color='#04113E' mb={3}>
                         Thông số kỹ thuật
                       </Text>
-                      <SimpleGrid columns={4} gap={6}>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Hãng
-                          </Text>
-                          <RouterLink to='/products'>
-                            <Text
-                              fontSize='14px'
-                              fontWeight='400'
-                              color='#204ED3'
-                              _hover={{ textDecoration: 'underline' }}
-                            >
-                              {productData.product?.brands?.name || 'N/A'}
-                            </Text>
-                          </RouterLink>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Dòng xe
-                          </Text>
-                          <RouterLink to='/products'>
-                            <Text
-                              fontSize='14px'
-                              fontWeight='400'
-                              color='#204ED3'
-                              _hover={{ textDecoration: 'underline' }}
-                            >
-                              {productData.product?.models?.name || 'N/A'}
-                            </Text>
-                          </RouterLink>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Năm sản xuất
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.yearManufactured || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1}>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Phiên bản xe
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.versions?.name || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Hộp số
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.transmissions?.name || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Nhiên liệu
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.fuels?.name || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Kiểu dáng
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.bodyStyles?.name || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1}>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Số chỗ
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.seats || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Hệ dẫn động
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.drive || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Công suất động cơ
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.power || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Momen xoắn
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.torque || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1}>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Dung tích động cơ
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.engineCapacity || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Nhiên liệu tiêu thụ
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.fuelConsumption || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Số cửa
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.doors || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Trọng lượng
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.weight || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1}>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Trọng tải
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.payload || 'N/A'}
-                          </Text>
-                        </VStack>
-                        <VStack align='flex-start' gap={1} pr={3} borderRight='1px solid #E5E5E5'>
-                          <Text fontSize='14px' fontWeight='400' color='#737373'>
-                            Khoảng sáng gầm xe
-                          </Text>
-                          <Text fontSize='14px' fontWeight='400' color='#04113E'>
-                            {productData.product?.groundClearance || 'N/A'}
-                          </Text>
-                        </VStack>
-                      </SimpleGrid>
+                      {renderDetailGrid(technicalDetails, 'technical')}
                     </Box>
+
+                    {additionalSpecs.length > 0 && (
+                      <>
+                        <Separator />
+                        <Box>
+                          <Text fontSize='16px' fontWeight='500' color='#04113E' mb={3}>
+                            Thông số bổ sung
+                          </Text>
+                          <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                            {additionalSpecs.map((spec, index) => (
+                              <Box
+                                key={`${spec.name}-${spec.value}-${index}`}
+                                border='1px solid #E5E5E5'
+                                borderRadius='12px'
+                                p={4}
+                              >
+                                <Text fontSize='14px' fontWeight='400' color='#737373'>
+                                  {spec.name}
+                                </Text>
+                                <Text fontSize='14px' fontWeight='500' color='#04113E'>
+                                  {spec.value}
+                                </Text>
+                              </Box>
+                            ))}
+                          </SimpleGrid>
+                        </Box>
+                      </>
+                    )}
                   </VStack>
                 </VStack>
               </Card.Root>
@@ -464,7 +425,11 @@ export function ProductDetail() {
                   rating: 0,
                   activeTime: formatTimeAgo(productData.product?.createdAt || ''),
                   responseRate: '86%',
-                  stats: { selling: 71, sold: 65, favorites: 625 }
+                  stats: {
+                    selling: storeStats?.selling ?? 0,
+                    sold: storeStats?.sold ?? 0,
+                    favorites: storeStats?.favorites ?? 0
+                  }
                 }}
                 quickChat={QUICK_CHAT_MESSAGES}
               />
@@ -515,6 +480,7 @@ function ImageGallery({
   onSelectImage: (index: number) => void
 }) {
   const [currentPage, setCurrentPage] = useState(selectedImage)
+
   return (
     <VStack align='stretch' gap={5} maxW='100%' overflow='hidden'>
       <Box position='relative' borderRadius='16px' overflow='hidden' bg='white' maxW='100%'>
@@ -529,24 +495,27 @@ function ImageGallery({
         >
           <Carousel.Control width='100%' position='relative'>
             <Carousel.ItemGroup>
-              {images.map((image, index) => (
-                <Carousel.Item key={index} index={index}>
-                  <Box
-                    width='100%'
-                    height='412px'
-                    position='relative'
-                    overflow='hidden'
-                    borderRadius='16px'
-                  >
+              {images.map((mediaUrl, index) => (
+                <Carousel.Item key={index} index={index} width='100%' maxH='420px'>
+                  {isVideo(mediaUrl) ? (
+                    <ReactPlayer
+                      src={mediaUrl}
+                      width='100%'
+                      height='100%'
+                      controls
+                      playing={currentPage === index}
+                      style={{ borderRadius: '16px', overflow: 'hidden' }}
+                    />
+                  ) : (
                     <Image
-                      src={image}
+                      src={mediaUrl}
                       alt={`Product ${index + 1}`}
                       width='100%'
                       height='100%'
                       objectFit='cover'
                       objectPosition='center'
                     />
-                  </Box>
+                  )}
                 </Carousel.Item>
               ))}
             </Carousel.ItemGroup>
@@ -576,31 +545,45 @@ function ImageGallery({
               </Carousel.PrevTrigger>
 
               <Carousel.ItemGroup gap={5} flex={1} maxW='100%' overflow='hidden'>
-                {images.map((image, index) => (
-                  <Carousel.Item key={index} index={index}>
-                    <Box
-                      width='120px'
-                      height='120px'
-                      borderRadius='8px'
-                      overflow='hidden'
-                      cursor='pointer'
-                      border={currentPage === index ? '2px solid #204ED3' : '1px solid #E5E5E5'}
-                      flexShrink={0}
-                      onClick={() => {
-                        setCurrentPage(index)
-                        onSelectImage(index)
-                      }}
-                    >
-                      <Image
-                        src={image}
-                        alt={`Thumbnail ${index + 1}`}
-                        width='100%'
-                        height='100%'
-                        objectFit='cover'
-                      />
-                    </Box>
-                  </Carousel.Item>
-                ))}
+                {images.map((mediaUrl, index) => {
+                  return (
+                    <Carousel.Item key={index} index={index}>
+                      <Box
+                        width='120px'
+                        height='120px'
+                        borderRadius='8px'
+                        overflow='hidden'
+                        cursor='pointer'
+                        border={currentPage === index ? '2px solid #204ED3' : '1px solid #E5E5E5'}
+                        flexShrink={0}
+                        position='relative'
+                        onClick={() => {
+                          setCurrentPage(index)
+                          onSelectImage(index)
+                        }}
+                      >
+                        {isVideo(mediaUrl) ? (
+                          <ReactPlayer
+                            src={mediaUrl}
+                            width='100%'
+                            height='100%'
+                            light
+                            playing={false}
+                            style={{ borderRadius: '8px', overflow: 'hidden', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Image
+                            src={mediaUrl}
+                            alt={`Thumbnail ${index + 1}`}
+                            width='100%'
+                            height='100%'
+                            objectFit='cover'
+                          />
+                        )}
+                      </Box>
+                    </Carousel.Item>
+                  )
+                })}
               </Carousel.ItemGroup>
 
               <Carousel.NextTrigger asChild>
@@ -743,13 +726,33 @@ function ProductInfoCard({
               </Text>
             </HStack>
           </HStack>
+          {Array.isArray(product.specs) && product.specs.length > 0 && (
+            <VStack align='flex-start' gap={2} width='100%' pt={2}>
+              {product.specs
+                .filter(spec => spec.name && spec.value)
+                .slice(0, 3)
+                .map((spec, index) => (
+                  <HStack key={`${spec.name}-${index}`} gap={2} width='100%'>
+                    <Text fontSize='14px' fontWeight='500' color='#737373' minW='120px'>
+                      {spec.name}:
+                    </Text>
+                    <Text fontSize='14px' fontWeight='400' color='#04113E'>
+                      {spec.value}
+                    </Text>
+                  </HStack>
+                ))}
+            </VStack>
+          )}
           <HStack gap={2}>
-            <Text fontSize='32px' fontWeight='700' color='#204ED3' lineHeight='0.875em'>
-              {new Intl.NumberFormat('vi-VN').format(product.price)}
-            </Text>
-            <Text fontSize='16px' fontWeight='700' color='#04113E'>
-              VNĐ
-            </Text>
+            {typeof product.price === 'number' ? (
+              <Text fontSize='32px' fontWeight='700' color='#204ED3' lineHeight='0.875em'>
+                <CurrencyFormat value={product.price} currency='VND' currencyDisplay='code' />
+              </Text>
+            ) : (
+              <Text fontSize='32px' fontWeight='700' color='#204ED3' lineHeight='0.875em'>
+                {product.price || 'N/A'}
+              </Text>
+            )}
           </HStack>
           <Box borderTop='1px solid #E5E7EB' pt={4} width='100%'>
             <Text fontSize='14px' fontWeight='400' color='#A1A1A1'>
@@ -953,6 +956,17 @@ function CommentsSection({
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
+  const getInitials = (name?: string | null) => {
+    if (!name) return 'ND'
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map(part => part[0] || '')
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
+  }
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !isLoggedIn) {
@@ -965,7 +979,7 @@ function CommentsSection({
     }
 
     setIsSubmitting(true)
-    const { data, error } = await createComment(
+    const { error } = await createComment(
       {
         productId,
         content: commentText.trim()
@@ -977,7 +991,7 @@ function CommentsSection({
       toast.error(error.message || 'Không thể đăng bình luận', {
         title: 'Lỗi'
       })
-    } else if (data) {
+    } else {
       setCommentText('')
       const { data: updatedComments } = await getProductComments(productId)
       if (updatedComments) {
@@ -998,7 +1012,7 @@ function CommentsSection({
     }
 
     setIsSubmitting(true)
-    const { data, error } = await createComment(
+    const { error } = await createComment(
       {
         productId,
         content: replyText.trim(),
@@ -1011,7 +1025,7 @@ function CommentsSection({
       toast.error(error.message || 'Không thể đăng trả lời', {
         title: 'Lỗi'
       })
-    } else if (data) {
+    } else {
       setReplyText('')
       setReplyingTo(null)
       const { data: updatedComments } = await getProductComments(productId)
@@ -1023,16 +1037,21 @@ function CommentsSection({
   }
 
   const handleDeleteComment = async (commentId: string) => {
-    const { error } = await deleteComment(commentId, user)
-    if (error) {
-      toast.error(error.message || 'Không thể xóa bình luận', {
-        title: 'Lỗi'
-      })
-    } else {
-      const { data: updatedComments } = await getProductComments(productId)
-      if (updatedComments) {
-        onCommentsChange(updatedComments)
+    setDeletingCommentId(commentId)
+    try {
+      const { error } = await deleteComment(commentId, user)
+      if (error) {
+        toast.error(error.message || 'Không thể xóa bình luận', {
+          title: 'Lỗi'
+        })
+      } else {
+        const { data: updatedComments } = await getProductComments(productId)
+        if (updatedComments) {
+          onCommentsChange(updatedComments)
+        }
       }
+    } finally {
+      setDeletingCommentId(null)
     }
   }
 
@@ -1056,19 +1075,23 @@ function CommentsSection({
             </Text>
           </VStack>
         ) : (
-          <VStack align='stretch' gap={4} px={6} maxH='600px' overflowY='auto'>
+          <VStack align='stretch' gap={2} px={6} maxH='600px' overflowY='auto'>
             {comments.map(comment => (
-              <Box key={comment.id} borderBottom='1px solid #E5E5E5' pb={4}>
+              <Box key={comment.id} borderBottom='1px solid #E5E5E5' pb={2}>
                 <HStack align='flex-start' gap={3}>
-                  {comment.user?.avatarUrl && (
-                    <Image
-                      src={comment.user.avatarUrl}
-                      alt={comment.user?.fullName || 'User'}
-                      width='40px'
-                      height='40px'
-                      borderRadius='full'
+                  <Avatar.Root
+                    boxSize='40px'
+                    borderRadius='full'
+                    bg='#E2E8F0'
+                    color='#1F2937'
+                    fontSize='14px'
+                  >
+                    <Avatar.Image
+                      src={comment.user?.avatarUrl || undefined}
+                      alt={comment.user?.fullName || 'Người dùng'}
                     />
-                  )}
+                    <Avatar.Fallback>{getInitials(comment.user?.fullName)}</Avatar.Fallback>
+                  </Avatar.Root>
                   <VStack align='flex-start' gap={1} flex={1}>
                     <HStack justify='space-between' width='100%'>
                       <Text fontSize='14px' fontWeight='600' color='#222222'>
@@ -1084,6 +1107,7 @@ function CommentsSection({
                             size='xs'
                             color='#EF4444'
                             onClick={() => handleDeleteComment(comment.id)}
+                            loading={deletingCommentId === comment.id}
                           >
                             Xóa
                           </Button>
@@ -1127,15 +1151,19 @@ function CommentsSection({
                       <VStack align='stretch' gap={3} mt={3} pl={4} borderLeft='2px solid #E5E5E5'>
                         {comment.replies.map(reply => (
                           <HStack key={reply.id} align='flex-start' gap={2}>
-                            {reply.user?.avatarUrl && (
-                              <Image
-                                src={reply.user.avatarUrl}
-                                alt={reply.user?.fullName || 'User'}
-                                width='32px'
-                                height='32px'
-                                borderRadius='full'
+                            <Avatar.Root
+                              boxSize='32px'
+                              borderRadius='full'
+                              bg='#E2E8F0'
+                              color='#1F2937'
+                              fontSize='12px'
+                            >
+                              <Avatar.Image
+                                src={reply.user?.avatarUrl || undefined}
+                                alt={reply.user?.fullName || 'Người dùng'}
                               />
-                            )}
+                              <Avatar.Fallback>{getInitials(reply.user?.fullName)}</Avatar.Fallback>
+                            </Avatar.Root>
                             <VStack align='flex-start' gap={1} flex={1}>
                               <HStack justify='space-between' width='100%'>
                                 <Text fontSize='13px' fontWeight='600' color='#222222'>
@@ -1151,6 +1179,7 @@ function CommentsSection({
                                       size='xs'
                                       color='#EF4444'
                                       onClick={() => handleDeleteComment(reply.id)}
+                                      loading={deletingCommentId === reply.id}
                                     >
                                       Xóa
                                     </Button>
@@ -1348,18 +1377,20 @@ function SimilarProductsSection({
                 Tìm sản phẩm khác để so sánh...
               </Text>
             </Box>
-            <Button
-              bg='#204ED3'
-              color='white'
-              borderRadius='6px'
-              px={5}
-              py={2.5}
-              fontWeight='700'
-              fontSize='14px'
-              _hover={{ bg: '#1a3fb0' }}
-            >
-              Tìm xe ngay
-            </Button>
+            <RouterLink to={PATHS.PRODUCTS}>
+              <Button
+                bg='#204ED3'
+                color='white'
+                borderRadius='6px'
+                px={5}
+                py={2.5}
+                fontWeight='700'
+                fontSize='14px'
+                _hover={{ bg: '#1a3fb0' }}
+              >
+                Tìm xe ngay
+              </Button>
+            </RouterLink>
           </HStack>
         </Box>
 
@@ -1444,14 +1475,15 @@ function ProductComparisonCard({
               {product.title}
             </Text>
             <HStack gap={2}>
-              <Text fontSize='20px' fontWeight='700' color='#204ED3'>
-                {typeof product.price === 'number'
-                  ? new Intl.NumberFormat('vi-VN').format(product.price)
-                  : product.price}
-              </Text>
-              <Text fontSize='14px' fontWeight='700' color='#04113E'>
-                VNĐ
-              </Text>
+              {typeof product.price === 'number' ? (
+                <Text fontSize='20px' fontWeight='700' color='#204ED3'>
+                  <CurrencyFormat value={product.price} currency='VND' currencyDisplay='code' />
+                </Text>
+              ) : (
+                <Text fontSize='20px' fontWeight='700' color='#204ED3'>
+                  {product.price || 'N/A'}
+                </Text>
+              )}
             </HStack>
             <SimpleGrid columns={2} gap={3} borderTop='1px solid #E5E5E5' pt={3}>
               <VStack align='flex-start' gap={1} borderRight='1px solid #E5E5E5' pr={3}>
@@ -1634,14 +1666,19 @@ function RelatedProductsSection({
                       {product.title}
                     </Text>
                     <HStack gap={2}>
-                      <Text fontSize='20px' fontWeight='700' color='#204ED3'>
-                        {typeof product.price === 'number'
-                          ? new Intl.NumberFormat('vi-VN').format(product.price)
-                          : product.price}
-                      </Text>
-                      <Text fontSize='14px' fontWeight='700' color='#04113E'>
-                        VNĐ
-                      </Text>
+                      {typeof product.price === 'number' ? (
+                        <Text fontSize='20px' fontWeight='700' color='#204ED3'>
+                          <CurrencyFormat
+                            value={product.price}
+                            currency='VND'
+                            currencyDisplay='code'
+                          />
+                        </Text>
+                      ) : (
+                        <Text fontSize='20px' fontWeight='700' color='#204ED3'>
+                          {product.price || 'N/A'}
+                        </Text>
+                      )}
                     </HStack>
                   </VStack>
                 </Card.Body>

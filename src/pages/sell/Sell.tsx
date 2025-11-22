@@ -9,69 +9,86 @@ import {
   Icon,
   Image,
   Input,
-  Portal,
-  Select,
+  NumberInput,
   Text,
   Textarea,
-  VStack,
-  createListCollection
+  VStack
 } from '@chakra-ui/react'
 import { HiOutlineChevronDown, HiOutlinePhoto } from 'react-icons/hi2'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { useDropzone } from 'react-dropzone'
+import ReactPlayer from 'react-player'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, Link as RouterLink } from 'react-router'
+import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router'
 import { useToast } from '@/hooks/useToast'
 import { PATHS } from '@/configs/paths'
 import { VEHICLE_STATUSES, ORIGINS, SEATS } from '@/mocks/filters'
 import { useMasterData } from '@/hooks/useMasterData'
 import { useAuth } from '@/hooks/useAuth'
-import { createProduct, uploadProductMedia } from '@/api/products'
+import { createProduct, getProductById, updateProduct, uploadProductMedia } from '@/api/products'
+import { createMasterDataCollection } from '@/utils/collections'
+import { SelectFieldController } from '@/components/common/SelectField'
+import { isVideo } from '@/utils/media'
+import type { ProductDetailData } from '@/types/products'
 
 const specSchema = z.object({
   name: z.string().min(1, 'Tên thông số bắt buộc'),
   value: z.string().min(1, 'Giá trị bắt buộc')
 })
 
-const sellSchema = z.object({
-  title: z.string().min(10, 'Tiêu đề cần ít nhất 10 ký tự').max(100, 'Tiêu đề tối đa 100 ký tự'),
-  description: z.string().optional(),
-  mileage: z
-    .string()
-    .min(1, 'Số km không hợp lệ')
-    .refine(val => /^\d+$/.test(val) && Number(val) >= 0, 'Số km phải là số không âm'),
-  condition: z.string().min(1, 'Vui lòng chọn tình trạng'),
-  origin: z.string().min(1, 'Vui lòng chọn xuất xứ'),
-  warranty: z.string().optional(),
-  brandId: z.string().min(1, 'Chọn hãng xe'),
-  modelId: z.string().min(1, 'Chọn dòng xe'),
-  year: z
-    .string()
-    .min(1, 'Chọn năm sản xuất')
-    .refine(val => /^\d{4}$/.test(val), 'Năm sản xuất không hợp lệ'),
-  versionId: z.string().min(1, 'Chọn phiên bản'),
-  transmissionId: z.string().min(1, 'Chọn hộp số'),
-  fuelId: z.string().min(1, 'Chọn nhiên liệu'),
-  bodyStyleId: z.string().min(1, 'Chọn kiểu dáng'),
-  seats: z.string().min(1, 'Chọn số chỗ'),
-  colorId: z.string().min(1, 'Chọn màu sắc'),
-  price: z
-    .string()
-    .min(1, 'Nhập giá bán')
-    .refine(
-      val => /^\d+$/.test(val) && Number(val) >= 10000000,
-      'Giá bán tối thiểu 10.000.000 VND'
-    ),
-  specs: z.array(specSchema).min(0),
-  media: z.array(z.string().url()).min(1, 'Tối thiểu 1 hình ảnh').max(10, 'Tối đa 10 hình ảnh')
-})
+const sellSchema = z
+  .object({
+    title: z.string().min(10, 'Tiêu đề cần ít nhất 10 ký tự').max(100, 'Tiêu đề tối đa 100 ký tự'),
+    description: z.string().optional(),
+    mileage: z.string().optional(),
+    condition: z.string().min(1, 'Vui lòng chọn tình trạng'),
+    origin: z.string().min(1, 'Vui lòng chọn xuất xứ'),
+    warranty: z.string().optional(),
+    brandId: z.string().min(1, 'Chọn hãng xe'),
+    modelId: z.string().min(1, 'Chọn dòng xe'),
+    year: z
+      .string()
+      .min(1, 'Chọn năm sản xuất')
+      .refine(val => /^\d{4}$/.test(val), 'Năm sản xuất không hợp lệ'),
+    versionId: z.string().min(1, 'Chọn phiên bản'),
+    transmissionId: z.string().min(1, 'Chọn hộp số'),
+    fuelId: z.string().min(1, 'Chọn nhiên liệu'),
+    bodyStyleId: z.string().min(1, 'Chọn kiểu dáng'),
+    seats: z.string().min(1, 'Chọn số chỗ'),
+    colorId: z.string().min(1, 'Chọn màu sắc'),
+    price: z
+      .string()
+      .min(1, 'Nhập giá bán')
+      .refine(val => {
+        const numValue = Number(val.replace(/[^\d]/g, ''))
+        return !isNaN(numValue) && numValue > 0
+      }, 'Giá bán phải là số lớn hơn 0'),
+    specs: z.array(specSchema).min(0),
+    media: z.array(z.string().url()).min(1, 'Tối thiểu 1 hình ảnh').max(10, 'Tối đa 10 hình ảnh')
+  })
+  .refine(
+    data => {
+      if (data.condition === 'Xe cũ') {
+        if (!data.mileage || data.mileage.trim() === '') {
+          return false
+        }
+        return /^\d+$/.test(data.mileage) && Number(data.mileage) >= 0
+      }
+      return true
+    },
+    {
+      message: 'Số km phải là số không âm',
+      path: ['mileage']
+    }
+  )
 
 type SellFormData = z.infer<typeof sellSchema>
 
 export function Sell() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, store, isLoading: isLoadingAuth } = useAuth()
   const toast = useToast()
   const {
@@ -128,7 +145,11 @@ export function Sell() {
 
   const mediaList = watch('media')
   const selectedBrandId = watch('brandId')
+  const selectedCondition = watch('condition')
+  const isUsedCar = selectedCondition === 'Xe cũ'
   const [isUploading, setIsUploading] = useState(false)
+  const productId = searchParams.get('product-id')
+  const isEditMode = Boolean(productId)
 
   const models = useMemo(() => {
     if (!selectedBrandId) {
@@ -142,6 +163,12 @@ export function Sell() {
       setValue('modelId', '')
     }
   }, [selectedBrandId, setValue])
+
+  useEffect(() => {
+    if (selectedCondition !== 'Xe cũ') {
+      setValue('mileage', '')
+    }
+  }, [selectedCondition, setValue])
 
   const hasStore = !!store
   const isLoadingStore = isLoadingAuth
@@ -221,7 +248,7 @@ export function Sell() {
     [toast]
   )
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleFiles,
     onDropRejected,
     accept: ACCEPTED_FILE_TYPES,
@@ -251,131 +278,163 @@ export function Sell() {
       return
     }
 
-    const conditionType = data.condition === 'Xe mới' ? 'new' : 'used'
+    const conditionType: 'new' | 'used' = data.condition === 'Xe mới' ? 'new' : 'used'
     const seatsNumber = parseInt(data.seats.replace(' chỗ', ''))
+    const priceValue = Number(data.price.replace(/[^\d]/g, ''))
+    const isUsedCarSubmit = data.condition === 'Xe cũ'
 
-    const { error } = await createProduct(
-      {
-        title: data.title,
-        description: data.description || null,
-        price: Number(data.price),
-        mileageKm: data.mileage ? Number(data.mileage) : null,
-        conditionType,
-        origin: data.origin,
-        warrantyPolicy: data.warranty || null,
-        brandId: data.brandId,
-        modelId: data.modelId,
-        yearManufactured: data.year,
-        versionId: data.versionId,
-        transmissionId: data.transmissionId,
-        fuelId: data.fuelId,
-        bodyStyleId: data.bodyStyleId,
-        seats: seatsNumber,
-        colorId: data.colorId,
-        mediaUrls: data.media,
-        specs: data.specs,
-        storeId: store.id
-      },
-      user
-    )
+    const payload: Parameters<typeof createProduct>[0] = {
+      title: data.title,
+      description: data.description || null,
+      price: priceValue,
+      mileageKm: isUsedCarSubmit && data.mileage ? Number(data.mileage) : null,
+      conditionType,
+      origin: data.origin,
+      warrantyPolicy: data.warranty || null,
+      brandId: data.brandId,
+      modelId: data.modelId,
+      yearManufactured: data.year,
+      versionId: data.versionId,
+      transmissionId: data.transmissionId,
+      fuelId: data.fuelId,
+      bodyStyleId: data.bodyStyleId,
+      seats: seatsNumber,
+      colorId: data.colorId,
+      mediaUrls: data.media,
+      specs: data.specs,
+      storeId: store.id
+    }
 
-    if (error) {
-      toast.error(error.message || 'Không thể đăng tin', {
-        title: 'Lỗi đăng tin'
-      })
+    const response =
+      isEditMode && productId
+        ? await updateProduct(productId, payload, user)
+        : await createProduct(payload, user)
+
+    if (response.error) {
+      toast.error(
+        response.error.message || (isEditMode ? 'Không thể cập nhật tin' : 'Không thể đăng tin'),
+        {
+          title: isEditMode ? 'Lỗi cập nhật' : 'Lỗi đăng tin'
+        }
+      )
       return
     }
 
-    toast.success('Tin đăng của bạn đang chờ kiểm duyệt', {
-      title: 'Đăng tin thành công'
-    })
-    reset(defaultValues)
+    toast.success(
+      isEditMode
+        ? 'Tin đăng đã được cập nhật và đang chờ kiểm duyệt'
+        : 'Tin đăng của bạn đang chờ kiểm duyệt',
+      {
+        title: isEditMode ? 'Cập nhật thành công' : 'Đăng tin thành công'
+      }
+    )
+    if (isEditMode && response.data) {
+      reset(mapProductToFormValues(response.data as ProductDetailData))
+    } else {
+      reset(defaultValues)
+    }
     navigate(PATHS.USER.MANAGE_LISTINGS)
   }
 
   const handleCancel = () => {
     reset(defaultValues)
+    navigate(-1)
   }
 
-  const brandCollection = useMemo(
-    () =>
-      createListCollection({
-        items: brands.map(b => ({ label: b.name, value: b.id }))
-      }),
-    [brands]
-  )
+  const mapProductToFormValues = useCallback((product: ProductDetailData): SellFormData => {
+    const extendedProduct = product as ProductDetailData & {
+      fuelId?: string | null
+      transmissionId?: string | null
+      colorId?: string | null
+      specs?: Array<{ name: string; value: string }> | null
+      mediaUrls?: string[] | null
+    }
 
+    const specs = Array.isArray(extendedProduct.specs)
+      ? extendedProduct.specs.map(spec => ({
+          name: spec.name || '',
+          value: spec.value || ''
+        }))
+      : []
+
+    return {
+      title: product.title || '',
+      description: product.description || '',
+      mileage: product.mileageKm ? String(product.mileageKm) : '',
+      condition: product.conditionType === 'new' ? 'Xe mới' : 'Xe cũ',
+      origin: product.origin || '',
+      warranty: product.warrantyPolicy || '',
+      brandId: product.brandId || '',
+      modelId: product.modelId || '',
+      year: product.yearManufactured || '',
+      versionId: product.versionId || '',
+      transmissionId: extendedProduct.transmissionId || '',
+      fuelId: extendedProduct.fuelId || '',
+      bodyStyleId: product.bodyStyleId || '',
+      seats: product.seats ? `${product.seats} chỗ` : '',
+      colorId: extendedProduct.colorId || '',
+      price: product.price ? product.price.toString() : '',
+      specs,
+      media: extendedProduct.mediaUrls ?? []
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!productId || !user || !store) {
+      return
+    }
+    ;(async () => {
+      const { data, error } = await getProductById(productId)
+      if (error || !data) {
+        toast.error('Không thể tải dữ liệu tin đăng', {
+          title: 'Lỗi tải dữ liệu'
+        })
+        navigate(PATHS.USER.MANAGE_LISTINGS)
+        return
+      }
+
+      if (data.storeId !== store.id) {
+        toast.error('Bạn không có quyền chỉnh sửa tin đăng này', {
+          title: 'Không có quyền'
+        })
+        navigate(PATHS.USER.MANAGE_LISTINGS)
+        return
+      }
+
+      reset(mapProductToFormValues(data))
+    })()
+  }, [user?.id, store])
+
+  const brandCollection = useMemo(() => createMasterDataCollection(brands), [brands])
   const transmissionCollection = useMemo(
-    () =>
-      createListCollection({
-        items: transmissions.map(t => ({ label: t.name, value: t.id }))
-      }),
+    () => createMasterDataCollection(transmissions),
     [transmissions]
   )
-
-  const fuelCollection = useMemo(
-    () =>
-      createListCollection({
-        items: fuels.map(f => ({ label: f.name, value: f.id }))
-      }),
-    [fuels]
-  )
-
-  const bodyStyleCollection = useMemo(
-    () =>
-      createListCollection({
-        items: bodyStyles.map(b => ({ label: b.name, value: b.id }))
-      }),
-    [bodyStyles]
-  )
-
-  const colorCollection = useMemo(
-    () =>
-      createListCollection({
-        items: colors.map(c => ({ label: c.name, value: c.id }))
-      }),
-    [colors]
-  )
+  const fuelCollection = useMemo(() => createMasterDataCollection(fuels), [fuels])
+  const bodyStyleCollection = useMemo(() => createMasterDataCollection(bodyStyles), [bodyStyles])
+  const colorCollection = useMemo(() => createMasterDataCollection(colors), [colors])
 
   const conditionCollection = useMemo(
-    () =>
-      createListCollection({
-        items: VEHICLE_STATUSES.map(c => ({ label: c, value: c }))
-      }),
+    () => createMasterDataCollection(VEHICLE_STATUSES.map(c => ({ label: c, value: c }))),
     []
   )
 
   const originCollection = useMemo(
-    () =>
-      createListCollection({
-        items: ORIGINS.map(o => ({ label: o, value: o }))
-      }),
+    () => createMasterDataCollection(ORIGINS.map(o => ({ label: o, value: o }))),
     []
   )
 
   const seatsCollection = useMemo(
-    () =>
-      createListCollection({
-        items: SEATS.map(s => ({ label: s, value: s }))
-      }),
+    () => createMasterDataCollection(SEATS.map(s => ({ label: s, value: s }))),
     []
   )
 
   const modelCollection = useMemo(
-    () =>
-      createListCollection({
-        items: models.map(m => ({ label: m.name, value: m.id }))
-      }),
+    () => createMasterDataCollection(models.map(m => ({ label: m.name, value: m.id }))),
     [models]
   )
 
-  const versionCollection = useMemo(
-    () =>
-      createListCollection({
-        items: versions.map(v => ({ label: v.name, value: v.id }))
-      }),
-    [versions]
-  )
+  const versionCollection = useMemo(() => createMasterDataCollection(versions), [versions])
 
   if (isLoadingStore) {
     return (
@@ -418,7 +477,6 @@ export function Sell() {
       </Box>
     )
   }
-
   return (
     <Box bg='#F8FAFC' minH='100vh' py={10}>
       <Box maxW='1200px' mx='auto' px={{ base: 4, md: 6 }} className='max-w-[1200px]'>
@@ -532,6 +590,7 @@ export function Sell() {
                       Chọn từ 1 đến 10 hình ảnh/video (tối đa {MAX_FILE_SIZE_MB}MB mỗi file)
                     </Text>
                     <Button
+                      type='button'
                       variant='outline'
                       borderColor='#204ED3'
                       color='#204ED3'
@@ -541,7 +600,10 @@ export function Sell() {
                       fontWeight='600'
                       fontSize='14px'
                       disabled={isUploading}
-                      onClick={e => e.stopPropagation()}
+                      onClick={e => {
+                        e.stopPropagation()
+                        open()
+                      }}
                       className='rounded-md px-5 py-3 font-semibold text-sm'
                     >
                       {isUploading ? 'Đang tải lên...' : 'Chọn file'}
@@ -559,13 +621,23 @@ export function Sell() {
                       className='rounded-xl border border-[#E5E5E5] overflow-hidden'
                     >
                       <Box w='full' h='120px' bg='gray.100'>
-                        <Image
-                          src={url}
-                          alt={`media-${index}`}
-                          width='100%'
-                          height='100%'
-                          objectFit='cover'
-                        />
+                        {isVideo(url) ? (
+                          <ReactPlayer
+                            src={url}
+                            width='100%'
+                            height='100%'
+                            controls
+                            light={false}
+                          />
+                        ) : (
+                          <Image
+                            src={url}
+                            alt={`media-${index}`}
+                            width='100%'
+                            height='100%'
+                            objectFit='cover'
+                          />
+                        )}
                       </Box>
                       <Button
                         onClick={() => removeMedia(index)}
@@ -599,103 +671,41 @@ export function Sell() {
                   Thông số chi tiết (*)
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
-                  <Field.Root invalid={!!errors.mileage}>
-                    <Field.Label>Số Km đã đi</Field.Label>
-                    <Input
-                      placeholder='Nhập số km đã đi'
-                      bg='white'
-                      borderColor='#E5E5E5'
-                      borderRadius='8px'
-                      px={4}
-                      py={3}
-                      fontSize='16px'
-                      color='#737373'
-                      {...register('mileage')}
-                    />
-                    {errors.mileage && <Field.ErrorText>{errors.mileage.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Tình trạng'
+                    collection={conditionCollection}
+                    control={control}
+                    name='condition'
+                    placeholder='Chọn tình trạng'
+                  />
 
-                  <Field.Root invalid={!!errors.condition}>
-                    <Field.Label>Tình trạng</Field.Label>
-                    <Controller
-                      control={control}
-                      name='condition'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={conditionCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn tình trạng' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {conditionCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
+                  {isUsedCar && (
+                    <Field.Root invalid={!!errors.mileage}>
+                      <Field.Label>Số Km đã đi (*)</Field.Label>
+                      <Input
+                        placeholder='Nhập số km đã đi'
+                        bg='white'
+                        borderColor='#E5E5E5'
+                        borderRadius='8px'
+                        px={4}
+                        py={3}
+                        fontSize='16px'
+                        color='#737373'
+                        {...register('mileage')}
+                      />
+                      {errors.mileage && (
+                        <Field.ErrorText>{errors.mileage.message}</Field.ErrorText>
                       )}
-                    />
-                    {errors.condition && (
-                      <Field.ErrorText>{errors.condition.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
+                    </Field.Root>
+                  )}
 
-                  <Field.Root invalid={!!errors.origin}>
-                    <Field.Label>Xuất xứ</Field.Label>
-                    <Controller
-                      control={control}
-                      name='origin'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={originCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn xuất xứ' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {originCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.origin && <Field.ErrorText>{errors.origin.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Xuất xứ'
+                    collection={originCollection}
+                    control={control}
+                    name='origin'
+                    placeholder='Chọn xuất xứ'
+                  />
 
                   <Field.Root invalid={!!errors.warranty}>
                     <Field.Label>Chính sách bảo hành</Field.Label>
@@ -727,94 +737,28 @@ export function Sell() {
                   Thông số kỹ thuật (*)
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
-                  <Field.Root invalid={!!errors.brandId}>
-                    <Field.Label>Hãng</Field.Label>
-                    <Controller
-                      control={control}
-                      name='brandId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={brandCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn hãng xe' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {brandCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.brandId && <Field.ErrorText>{errors.brandId.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Hãng'
+                    collection={brandCollection}
+                    control={control}
+                    name='brandId'
+                    placeholder='Chọn hãng xe'
+                  />
 
-                  <Field.Root invalid={!!errors.modelId}>
-                    <Field.Label>Dòng xe</Field.Label>
-                    <Controller
-                      control={control}
-                      name='modelId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={modelCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                          disabled={!selectedBrandId || isLoadingMasterData}
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText
-                                placeholder={
-                                  !selectedBrandId
-                                    ? 'Chọn hãng xe trước'
-                                    : isLoadingMasterData
-                                      ? 'Đang tải...'
-                                      : 'Chọn dòng xe'
-                                }
-                              />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {modelCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.modelId && <Field.ErrorText>{errors.modelId.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Dòng xe'
+                    collection={modelCollection}
+                    control={control}
+                    name='modelId'
+                    placeholder={
+                      !selectedBrandId
+                        ? 'Chọn hãng xe trước'
+                        : isLoadingMasterData
+                          ? 'Đang tải...'
+                          : 'Chọn dòng xe'
+                    }
+                    disabled={!selectedBrandId || isLoadingMasterData}
+                  />
 
                   <Field.Root invalid={!!errors.year}>
                     <Field.Label>Năm sản xuất</Field.Label>
@@ -833,251 +777,53 @@ export function Sell() {
                     {errors.year && <Field.ErrorText>{errors.year.message}</Field.ErrorText>}
                   </Field.Root>
 
-                  <Field.Root invalid={!!errors.versionId}>
-                    <Field.Label>Phiên bản xe</Field.Label>
-                    <Controller
-                      control={control}
-                      name='versionId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={versionCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn phiên bản' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {versionCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.versionId && (
-                      <Field.ErrorText>{errors.versionId.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Phiên bản xe'
+                    collection={versionCollection}
+                    control={control}
+                    name='versionId'
+                    placeholder='Chọn phiên bản'
+                  />
 
-                  <Field.Root invalid={!!errors.transmissionId}>
-                    <Field.Label>Hộp số</Field.Label>
-                    <Controller
-                      control={control}
-                      name='transmissionId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={transmissionCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn hộp số' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {transmissionCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.transmissionId && (
-                      <Field.ErrorText>{errors.transmissionId.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Hộp số'
+                    collection={transmissionCollection}
+                    control={control}
+                    name='transmissionId'
+                    placeholder='Chọn hộp số'
+                  />
 
-                  <Field.Root invalid={!!errors.fuelId}>
-                    <Field.Label>Nhiên liệu</Field.Label>
-                    <Controller
-                      control={control}
-                      name='fuelId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={fuelCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn nhiên liệu' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {fuelCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.fuelId && <Field.ErrorText>{errors.fuelId.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Nhiên liệu'
+                    collection={fuelCollection}
+                    control={control}
+                    name='fuelId'
+                    placeholder='Chọn nhiên liệu'
+                  />
 
-                  <Field.Root invalid={!!errors.bodyStyleId}>
-                    <Field.Label>Kiểu dáng</Field.Label>
-                    <Controller
-                      control={control}
-                      name='bodyStyleId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={bodyStyleCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn kiểu dáng' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {bodyStyleCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.bodyStyleId && (
-                      <Field.ErrorText>{errors.bodyStyleId.message}</Field.ErrorText>
-                    )}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Kiểu dáng'
+                    collection={bodyStyleCollection}
+                    control={control}
+                    name='bodyStyleId'
+                    placeholder='Chọn kiểu dáng'
+                  />
 
-                  <Field.Root invalid={!!errors.seats}>
-                    <Field.Label>Số chỗ</Field.Label>
-                    <Controller
-                      control={control}
-                      name='seats'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={seatsCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn số chỗ' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {seatsCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.seats && <Field.ErrorText>{errors.seats.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Số chỗ'
+                    collection={seatsCollection}
+                    control={control}
+                    name='seats'
+                    placeholder='Chọn số chỗ'
+                  />
 
-                  <Field.Root invalid={!!errors.colorId}>
-                    <Field.Label>Màu sắc</Field.Label>
-                    <Controller
-                      control={control}
-                      name='colorId'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={colorCollection}
-                          value={field.value ? [field.value] : []}
-                          onValueChange={({ value }) => field.onChange(value[0] || '')}
-                          onInteractOutside={() => field.onBlur()}
-                          size='md'
-                        >
-                          <Select.HiddenSelect />
-                          <Select.Control>
-                            <Select.Trigger>
-                              <Select.ValueText placeholder='Chọn màu sắc' />
-                            </Select.Trigger>
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Control>
-                          <Portal>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {colorCollection.items.map(item => (
-                                  <Select.Item item={item} key={item.value}>
-                                    {item.label}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.colorId && <Field.ErrorText>{errors.colorId.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Màu sắc'
+                    collection={colorCollection}
+                    control={control}
+                    name='colorId'
+                    placeholder='Chọn màu sắc'
+                  />
                 </Grid>
 
                 <VStack align='stretch' gap={4}>
@@ -1164,16 +910,37 @@ export function Sell() {
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
                   <Field.Root invalid={!!errors.price}>
                     <Field.Label>Giá mong muốn (VND)</Field.Label>
-                    <Input
-                      placeholder='Nhập giá bán'
-                      bg='white'
-                      borderColor='#E5E5E5'
-                      borderRadius='8px'
-                      px={4}
-                      py={3}
-                      fontSize='16px'
-                      color='#737373'
-                      {...register('price')}
+                    <Controller
+                      name='price'
+                      control={control}
+                      render={({ field }) => (
+                        <NumberInput.Root
+                          value={field.value ?? ''}
+                          onValueChange={({ value }) => field.onChange(value)}
+                          clampValueOnBlur={false}
+                          min={0}
+                          formatOptions={{
+                            style: 'currency',
+                            maximumFractionDigits: 0,
+                            currency: 'VND',
+                            currencyDisplay: 'code'
+                          }}
+                        >
+                          <NumberInput.Input
+                            ref={field.ref}
+                            name={field.name}
+                            placeholder='Nhập giá bán'
+                            bg='white'
+                            borderColor='#E5E5E5'
+                            borderRadius='8px'
+                            px={4}
+                            py={3}
+                            fontSize='16px'
+                            color='#737373'
+                            onBlur={field.onBlur}
+                          />
+                        </NumberInput.Root>
+                      )}
                     />
                     {errors.price && <Field.ErrorText>{errors.price.message}</Field.ErrorText>}
                   </Field.Root>
@@ -1207,7 +974,13 @@ export function Sell() {
                   disabled={isSubmitting}
                   className='rounded-md px-5 py-3 font-semibold text-sm'
                 >
-                  {isSubmitting ? 'Đang đăng...' : 'Đăng tin'}
+                  {isSubmitting
+                    ? isEditMode
+                      ? 'Đang cập nhật...'
+                      : 'Đang đăng...'
+                    : isEditMode
+                      ? 'Cập nhật tin'
+                      : 'Đăng tin'}
                 </Button>
               </Flex>
             </VStack>

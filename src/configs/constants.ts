@@ -13,3 +13,17 @@ export const USER_ROLE = {
   SELLER: 'seller',
   ADMIN: 'admin'
 } as const
+
+export const PRODUCT_STATUS = {
+  PENDING: 'pending',
+  AVAILABLE: 'available',
+  SOLD: 'sold',
+  REJECTED: 'rejected'
+} as const
+
+export const BOOKING_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled'
+} as const

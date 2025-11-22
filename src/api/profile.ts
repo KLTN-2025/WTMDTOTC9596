@@ -12,7 +12,6 @@ export type Profile = {
   cid: string | null
   doi: string | null
   email: string | null
-  joinDate: string | null
   role: 'buyer' | 'seller' | 'admin'
   createdAt: string
   updatedAt: string

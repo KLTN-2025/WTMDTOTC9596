@@ -8,16 +8,19 @@ import { Provider as ReduxProvider } from 'react-redux'
 import { store } from '@/stores'
 import { MasterDataInitializer } from '@/components/common/MasterDataInitializer'
 import { AuthInitializer } from '@/components/common/AuthInitializer'
+import { LocaleProvider } from '@chakra-ui/react'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider store={store}>
       <Provider>
-        <AuthInitializer>
-          <MasterDataInitializer>
-            <RouterProvider router={router} />
-          </MasterDataInitializer>
-        </AuthInitializer>
+        <LocaleProvider locale='vi-VN'>
+          <AuthInitializer>
+            <MasterDataInitializer>
+              <RouterProvider router={router} />
+            </MasterDataInitializer>
+          </AuthInitializer>
+        </LocaleProvider>
       </Provider>
     </ReduxProvider>
   </StrictMode>

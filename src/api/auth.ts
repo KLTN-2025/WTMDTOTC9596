@@ -1,4 +1,4 @@
-import { supabase, lambdaSupabase } from '@/configs/supabase'
+import { supabase } from '@/configs/supabase'
 import { TABLES } from '@/configs/db'
 import type { LoginFormData, RegisterFormData } from '@/types/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber'
@@ -53,7 +53,7 @@ export const resetPassword = async (phone: string, newPassword: string) => {
     }
   }
 
-  const { data, error } = await lambdaSupabase.functions.invoke('reset-password', {
+  const { data, error } = await supabase.functions.invoke('reset-password', {
     body: {
       phoneNumber: formattedPhone,
       newPassword

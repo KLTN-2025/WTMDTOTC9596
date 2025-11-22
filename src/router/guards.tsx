@@ -1,14 +1,18 @@
 import { type ReactNode } from 'react'
 import { ProtectedRoute } from '@/components/guards/ProtectedRoute'
 import { PublicRoute } from '@/components/guards/PublicRoute'
+import { RoleProtectedRoute } from '@/components/guards/RoleProtectedRoute'
+import type { UserRole } from '@/types/permissions'
+import { PATHS } from '@/configs/paths'
 
-export type GuardType = 'public' | 'protected' | 'guest'
+export type GuardType = 'public' | 'protected' | 'guest' | 'role'
 
 export interface RouteGuardConfig {
   type: GuardType
   redirectTo?: string
   redirectIfAuthenticated?: boolean
   fallback?: ReactNode
+  roles?: UserRole[]
 }
 
 export interface GuardedRouteConfig {
@@ -16,18 +20,18 @@ export interface GuardedRouteConfig {
   guard?: RouteGuardConfig
 }
 
-const defaultGuards: Record<GuardType, RouteGuardConfig> = {
+const defaultGuards: Partial<Record<GuardType, RouteGuardConfig>> = {
   public: {
     type: 'public'
   },
   protected: {
     type: 'protected',
-    redirectTo: '/login'
+    redirectTo: PATHS.LOGIN
   },
   guest: {
-    type: 'public',
+    type: 'guest',
     redirectIfAuthenticated: true,
-    redirectTo: '/'
+    redirectTo: PATHS.HOME
   }
 }
 
@@ -39,10 +43,14 @@ export function createGuardedRoute(
     return element
   }
 
-  const config: RouteGuardConfig =
-    typeof guardConfig === 'string'
-      ? defaultGuards[guardConfig]
-      : { ...defaultGuards[guardConfig.type], ...guardConfig }
+  let config: RouteGuardConfig
+  if (typeof guardConfig === 'string') {
+    const defaultConfig = defaultGuards[guardConfig]
+    config = defaultConfig || { type: guardConfig }
+  } else {
+    const defaultConfig = defaultGuards[guardConfig.type]
+    config = defaultConfig ? { ...defaultConfig, ...guardConfig } : guardConfig
+  }
 
   switch (config.type) {
     case 'protected':
@@ -50,6 +58,16 @@ export function createGuardedRoute(
         <ProtectedRoute redirectTo={config.redirectTo!} fallback={config.fallback}>
           {element}
         </ProtectedRoute>
+      )
+    case 'role':
+      return (
+        <RoleProtectedRoute
+          redirectTo={config.redirectTo || PATHS.ROOT}
+          fallback={config.fallback}
+          roles={config.roles!}
+        >
+          {element}
+        </RoleProtectedRoute>
       )
     case 'guest':
       return (
@@ -70,5 +88,15 @@ export const routeGuards = {
   public: 'public' as const,
   protected: 'protected' as const,
   guest: 'guest' as const,
+  role: (roles: UserRole[], redirectTo?: string): RouteGuardConfig => {
+    const config: RouteGuardConfig = {
+      type: 'role',
+      roles
+    }
+    if (redirectTo !== undefined) {
+      config.redirectTo = redirectTo
+    }
+    return config
+  },
   custom: (config: RouteGuardConfig) => config
 }

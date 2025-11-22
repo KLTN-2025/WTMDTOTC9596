@@ -1,8 +1,9 @@
 import { supabase } from '@/configs/supabase'
 import { TABLES } from '@/configs/db'
-import type { TestDriveBooking, TestDriveBookingFormData } from '@/types/test-drive'
+import type { TestDriveBooking, TestDriveBookingFormData, BookingStatus } from '@/types/test-drive'
 import camelcaseKeys from 'camelcase-keys'
 import type { User } from '@supabase/supabase-js'
+import { BOOKING_STATUS } from '@/configs/constants'
 export const createTestDriveBooking = async (
   productId: string,
   storeId: string | null,
@@ -24,7 +25,7 @@ export const createTestDriveBooking = async (
       scheduled_at: formData.scheduledAt,
       location: formData.location,
       note: formData.note || null,
-      status: 'pending'
+      status: BOOKING_STATUS.PENDING
     })
     .select()
     .single()
@@ -125,10 +126,10 @@ export const cancelTestDriveBooking = async (bookingId: string, user: User | nul
 
   const { data, error } = await supabase
     .from(TABLES.TEST_DRIVE_BOOKINGS)
-    .update({ status: 'cancelled' })
+    .update({ status: BOOKING_STATUS.CANCELLED })
     .eq('id', bookingId)
     .eq('user_id', user.id)
-    .eq('status', 'pending')
+    .eq('status', BOOKING_STATUS.PENDING)
     .select()
     .single()
 
@@ -141,7 +142,7 @@ export const cancelTestDriveBooking = async (bookingId: string, user: User | nul
 
 export const updateTestDriveBookingStatus = async (
   bookingId: string,
-  status: 'confirmed' | 'completed' | 'cancelled',
+  status: Exclude<BookingStatus, typeof BOOKING_STATUS.PENDING>,
   user: User | null
 ) => {
   if (!user) {
@@ -179,6 +180,7 @@ export const getConfirmedCustomerContacts = async (
     page?: number
     pageSize?: number
     search?: string
+    status?: typeof BOOKING_STATUS.CONFIRMED | typeof BOOKING_STATUS.COMPLETED | 'all'
   }
 ) => {
   if (!storeId) {
@@ -194,7 +196,12 @@ export const getConfirmedCustomerContacts = async (
     .from(TABLES.TEST_DRIVE_BOOKINGS)
     .select('*', { count: 'exact' })
     .eq('store_id', storeId)
-    .eq('status', 'confirmed')
+
+  if (options?.status && options.status !== 'all') {
+    query = query.eq('status', options.status)
+  } else if (!options?.status || options.status === 'all') {
+    query = query.in('status', [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED])
+  }
 
   if (options?.search) {
     const searchTerm = `%${options.search}%`

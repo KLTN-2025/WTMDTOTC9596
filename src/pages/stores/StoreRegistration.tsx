@@ -6,12 +6,9 @@ import {
   Grid,
   Image,
   Input,
-  Portal,
-  Select,
   Text,
   Textarea,
-  VStack,
-  createListCollection
+  VStack
 } from '@chakra-ui/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -28,6 +25,8 @@ import { supabase } from '@/configs/supabase'
 import { TABLES } from '@/configs/db'
 import { useAppDispatch } from '@/stores/hooks'
 import { fetchUserData } from '@/stores/auth/authSlice'
+import { createMasterDataCollection } from '@/utils/collections'
+import { SelectFieldController } from '@/components/common/SelectField'
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
@@ -78,13 +77,7 @@ export function StoreRegistration() {
   const toast = useToast()
   const { locations } = useMasterData()
   const locationCollection = useMemo(
-    () =>
-      createListCollection({
-        items: locations.map(location => ({
-          label: location.name,
-          value: location.id
-        }))
-      }),
+    () => createMasterDataCollection(locations),
     [locations]
   )
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -593,38 +586,13 @@ export function StoreRegistration() {
                     {errors.taxCode && <Field.ErrorText>{errors.taxCode.message}</Field.ErrorText>}
                   </Field.Root>
 
-                  <Field.Root invalid={!!errors.address}>
-                    <Field.Label>Địa chỉ *</Field.Label>
-                    <Controller
-                      control={control}
-                      name='address'
-                      render={({ field }) => (
-                        <Select.Root
-                          collection={locationCollection}
-                          value={[field.value]}
-                          onValueChange={e => {
-                            field.onChange(e.value[0] || '')
-                          }}
-                        >
-                          <Select.Trigger bg='white' borderColor='#E5E5E5' borderRadius='8px'>
-                            <Select.ValueText placeholder='Chọn địa chỉ' />
-                          </Select.Trigger>
-                          <Portal>
-                            <Select.Content>
-                              <Select.ItemGroup id='locations'>
-                                {locations.map(location => (
-                                  <Select.Item key={location.id} item={location.id}>
-                                    {location.name}
-                                  </Select.Item>
-                                ))}
-                              </Select.ItemGroup>
-                            </Select.Content>
-                          </Portal>
-                        </Select.Root>
-                      )}
-                    />
-                    {errors.address && <Field.ErrorText>{errors.address.message}</Field.ErrorText>}
-                  </Field.Root>
+                  <SelectFieldController
+                    label='Địa chỉ *'
+                    collection={locationCollection}
+                    control={control}
+                    name='address'
+                    placeholder='Chọn địa chỉ'
+                  />
                 </Grid>
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>

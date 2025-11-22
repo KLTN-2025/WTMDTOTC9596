@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { toaster } from '@/components/ui/toaster'
 
 type ToastOptions = {
@@ -6,42 +7,45 @@ type ToastOptions = {
 }
 
 export function useToast() {
-  const error = (message: string, options?: ToastOptions) => {
+  const error = useCallback((message: string, options?: ToastOptions) => {
     toaster.create({
       title: options?.title || 'Lỗi',
       description: message,
       type: 'error'
     })
-  }
+  }, [])
 
-  const info = (message: string, options?: ToastOptions) => {
+  const info = useCallback((message: string, options?: ToastOptions) => {
     toaster.create({
       title: options?.title || 'Thông tin',
       description: message,
       type: 'info'
     })
-  }
+  }, [])
 
-  const warning = (message: string, options?: ToastOptions) => {
+  const warning = useCallback((message: string, options?: ToastOptions) => {
     toaster.create({
       title: options?.title || 'Cảnh báo',
       description: message,
       type: 'warning'
     })
-  }
+  }, [])
 
-  const success = (message: string, options?: ToastOptions) => {
+  const success = useCallback((message: string, options?: ToastOptions) => {
     toaster.create({
       title: options?.title || 'Thành công',
       description: message,
       type: 'success'
     })
-  }
+  }, [])
 
-  return {
-    error,
-    info,
-    warning,
-    success
-  }
+  return useMemo(
+    () => ({
+      error,
+      info,
+      warning,
+      success
+    }),
+    [error, info, warning, success]
+  )
 }

@@ -31,7 +31,7 @@ import { AboutSection } from '@/components/common/AboutSection'
 import { NewCarModelsSection } from '@/components/common/NewCarModelsSection'
 import { useEffect, useState } from 'react'
 import { getRecentProducts } from '@/api/products'
-import type { Brand, Product } from '@/types/products'
+import type { Product } from '@/types/products'
 import { useMasterData } from '@/hooks/useMasterData'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -47,52 +47,267 @@ import background from '@/assets/images/image.png'
 import { PATHS } from '@/configs/paths'
 import { DEFAULT_VALUES } from '@/configs/constants'
 import { useToast } from '@/hooks/useToast'
+import { CurrencyFormat } from '@/components/ui/currency-format'
+import { getFirstImage } from '@/utils/media'
+import { buildProductsPath } from '@/utils/paths'
 
 const searchSchema = z.object({ q: z.string().trim().max(200).optional().or(z.literal('')) })
 
-const buildProductsPath = (params?: {
+type SearchParams = {
   q?: string
   location?: string
   brand?: string
-  status?: string
-}) => {
-  if (!params) return PATHS.PRODUCTS
+}
 
-  const searchParams = new URLSearchParams()
-  if (params.q) searchParams.set('q', params.q)
-  if (params.location) searchParams.set('location', params.location)
-  if (params.brand) searchParams.set('brand', params.brand)
-  if (params.status) searchParams.set('status', params.status)
+function SearchSection({
+  isLoading,
+  onSearch
+}: {
+  isLoading: boolean
+  onSearch: (params: SearchParams) => void
+}) {
+  const { locations, brands } = useMasterData()
+  const { register, handleSubmit, watch } = useForm<z.infer<typeof searchSchema>>({
+    resolver: zodResolver(searchSchema),
+    defaultValues: { q: '' }
+  })
+  const [selectedLocation, setSelectedLocation] = useState<string>('')
+  const [selectedBrand, setSelectedBrand] = useState<string>('')
+  const searchQuery = watch('q') || ''
 
-  const queryString = searchParams.toString()
-  return queryString ? `${PATHS.PRODUCTS}?${queryString}` : PATHS.PRODUCTS
+  const handleSearch = handleSubmit(() => {
+    onSearch({
+      q: searchQuery,
+      location: selectedLocation,
+      brand: selectedBrand
+    })
+  })
+
+  return (
+    <Box bg='white' borderRadius='16px' p={6} mb={6}>
+      <VStack align='stretch' gap={5}>
+        <Text fontSize='20px' fontWeight='700' color='#04113E'>
+          Mua xe
+        </Text>
+
+        <Box bg='white' border='1px solid #E5E5E5' borderRadius='12px' py={2} px={2} pl={4}>
+          <form onSubmit={handleSearch}>
+            <Flex gap={5} direction={{ base: 'column', md: 'row' }} align='center'>
+              <InputGroup
+                flex={1}
+                endElement={
+                  <Icon size='lg' color='#04113E'>
+                    <HiOutlineSearch />
+                  </Icon>
+                }
+              >
+                <Input
+                  placeholder='Tìm xe cộ...'
+                  border='none'
+                  variant='flushed'
+                  fontSize='16px'
+                  pl={0}
+                  _focus={{ boxShadow: 'none' }}
+                  {...register('q')}
+                />
+              </InputGroup>
+
+              <Menu.Root>
+                <Menu.Trigger asChild>
+                  <Button
+                    variant='outline'
+                    borderColor='#04113E'
+                    color='#04113E'
+                    borderRadius='6px'
+                    px={5}
+                    py={3}
+                    gap={2}
+                    fontWeight='700'
+                    fontSize='14px'
+                  >
+                    <Icon size='md'>
+                      <HiOutlineMapPin />
+                    </Icon>
+                    {selectedLocation || 'Chọn khu vực'}
+                    <Icon size='md'>
+                      <HiOutlineChevronDown />
+                    </Icon>
+                  </Button>
+                </Menu.Trigger>
+                <Portal>
+                  <Menu.Positioner>
+                    <Menu.Content>
+                      <Menu.Item value='all' onClick={() => setSelectedLocation('')}>
+                        Tất cả
+                      </Menu.Item>
+                      {locations.map(loc => (
+                        <Menu.Item
+                          key={loc.id}
+                          value={loc.id}
+                          onClick={() => setSelectedLocation(loc.name)}
+                        >
+                          {loc.name}
+                        </Menu.Item>
+                      ))}
+                    </Menu.Content>
+                  </Menu.Positioner>
+                </Portal>
+              </Menu.Root>
+
+              <Menu.Root>
+                <Menu.Trigger asChild>
+                  <Button
+                    variant='outline'
+                    borderColor='#04113E'
+                    color='#04113E'
+                    borderRadius='6px'
+                    px={5}
+                    py={3}
+                    gap={2}
+                    fontWeight='700'
+                    fontSize='14px'
+                  >
+                    <Icon size='md'>
+                      <FaCar />
+                    </Icon>
+                    {selectedBrand || 'Hãng xe'}
+                    <Icon size='md'>
+                      <HiOutlineChevronDown />
+                    </Icon>
+                  </Button>
+                </Menu.Trigger>
+                <Portal>
+                  <Menu.Positioner>
+                    <Menu.Content>
+                      <Menu.Item value='all' onClick={() => setSelectedBrand('')}>
+                        Tất cả
+                      </Menu.Item>
+                      {brands.map(brand => (
+                        <Menu.Item
+                          key={brand.id}
+                          value={brand.id}
+                          onClick={() => setSelectedBrand(brand.name)}
+                        >
+                          {brand.name}
+                        </Menu.Item>
+                      ))}
+                    </Menu.Content>
+                  </Menu.Positioner>
+                </Portal>
+              </Menu.Root>
+
+              <Button
+                bg='#204ED3'
+                color='white'
+                borderRadius='6px'
+                px={5}
+                py={3}
+                fontWeight='700'
+                fontSize='14px'
+                _hover={{ bg: '#1a3fb0' }}
+                type='submit'
+                disabled={isLoading}
+                loading={isLoading}
+              >
+                Tìm xe ngay
+              </Button>
+            </Flex>
+          </form>
+        </Box>
+
+        <Box width='full' height='130px' borderRadius='8px' overflow='hidden'>
+          <Image src={background} alt='Banner' width='100%' height='100%' objectFit='cover' />
+        </Box>
+
+        <Box>
+          <HStack gap={4} overflowX='auto' py={2}>
+            {brands.slice(0, DEFAULT_VALUES.BRAND_DISPLAY_LIMIT).map(brand => (
+              <Box
+                key={brand.id}
+                minW='120px'
+                p={2}
+                borderRadius='8px'
+                border='1px solid #E5E5E5'
+                textAlign='center'
+                cursor='pointer'
+                _hover={{ bg: 'gray.50' }}
+                onClick={() => onSearch({ brand: brand.name })}
+              >
+                <Box
+                  width='40px'
+                  height='40px'
+                  bg={brand.logoUrl ? 'transparent' : '#204ED3'}
+                  borderRadius='4px'
+                  mx='auto'
+                  mb={2}
+                  display='flex'
+                  alignItems='center'
+                  justifyContent='center'
+                  color='white'
+                  fontWeight='bold'
+                >
+                  {brand.logoUrl ? (
+                    <Image
+                      src={brand.logoUrl}
+                      alt={brand.name}
+                      width='40px'
+                      height='40px'
+                      objectFit='contain'
+                    />
+                  ) : (
+                    brand.name.charAt(0)
+                  )}
+                </Box>
+                <Text fontSize='14px' fontWeight='700' color='#04113E'>
+                  {brand.name}
+                </Text>
+              </Box>
+            ))}
+            <RouterLink to={PATHS.PRODUCTS} style={{ textDecoration: 'none' }}>
+              <Box
+                minW='120px'
+                p={2}
+                borderRadius='8px'
+                border='1px solid #E5E5E5'
+                textAlign='center'
+                cursor='pointer'
+                _hover={{ bg: 'gray.50' }}
+              >
+                <Box
+                  width='40px'
+                  height='36px'
+                  mx='auto'
+                  mb={2}
+                  display='flex'
+                  alignItems='center'
+                  justifyContent='center'
+                  fontSize='20px'
+                  fontWeight='700'
+                  color='#171717'
+                >
+                  +
+                </Box>
+                <Text fontSize='14px' fontWeight='700' color='#04113E'>
+                  Xem thêm
+                </Text>
+              </Box>
+            </RouterLink>
+          </HStack>
+        </Box>
+      </VStack>
+    </Box>
+  )
 }
 
 export function Home() {
   const navigate = useNavigate()
   const toast = useToast()
-  const { brands: masterBrands, locations: masterLocations } = useMasterData()
   const [recentProducts, setRecentProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [totalProducts, setTotalProducts] = useState(0)
-  const [selectedLocation, setSelectedLocation] = useState<string>('')
-  const [selectedBrand, setSelectedBrand] = useState<string>('')
-  const { register, handleSubmit, watch } = useForm<z.infer<typeof searchSchema>>({
-    resolver: zodResolver(searchSchema),
-    defaultValues: { q: '' }
-  })
-  const searchQuery = watch('q') || ''
-
-  const brands: Brand[] = masterBrands.slice(0, DEFAULT_VALUES.BRAND_LIMIT).map(brand => ({
-    id: brand.id,
-    name: brand.name,
-    logoUrl: brand.logoUrl || null
-  }))
-
-  const locations = masterLocations.map(loc => ({
-    id: loc.id,
-    name: loc.name
-  }))
+  const handleSearch = (params: SearchParams) => {
+    navigate(buildProductsPath(params))
+  }
 
   useEffect(() => {
     const loadRecent = async () => {
@@ -123,17 +338,6 @@ export function Home() {
   const handleBrandClick = (brandName: string) => {
     navigate(buildProductsPath({ brand: brandName }))
   }
-
-  const onSearch = handleSubmit(() => {
-    navigate(
-      buildProductsPath({
-        q: searchQuery,
-        location: selectedLocation,
-        brand: selectedBrand
-      })
-    )
-  })
-
   const handleViewAllProducts = () => {
     navigate(PATHS.PRODUCTS)
   }
@@ -239,220 +443,16 @@ export function Home() {
       </Box>
 
       <Container maxW='1200px' px={4}>
-        {/* Search Section */}
-        <Box bg='white' borderRadius='16px' p={6} mb={6}>
-          <VStack align='stretch' gap={5}>
-            <Text fontSize='20px' fontWeight='700' color='#04113E'>
-              Mua xe
-            </Text>
-
-            <Box bg='white' border='1px solid #E5E5E5' borderRadius='12px' py={2} px={2} pl={4}>
-              <form onSubmit={onSearch}>
-                <Flex gap={5} direction={{ base: 'column', md: 'row' }} align='center'>
-                  <InputGroup
-                    flex={1}
-                    endElement={
-                      <Icon size='lg' color='#04113E'>
-                        <HiOutlineSearch />
-                      </Icon>
-                    }
-                  >
-                    <Input
-                      placeholder='Tìm xe cộ...'
-                      border='none'
-                      fontSize='16px'
-                      pl={0}
-                      _focus={{ boxShadow: 'none' }}
-                      {...register('q')}
-                    />
-                  </InputGroup>
-
-                  <Menu.Root>
-                    <Menu.Trigger asChild>
-                      <Button
-                        variant='outline'
-                        borderColor='#04113E'
-                        color='#04113E'
-                        borderRadius='6px'
-                        px={5}
-                        py={3}
-                        gap={2}
-                        fontWeight='700'
-                        fontSize='14px'
-                      >
-                        <Icon size='md'>
-                          <HiOutlineMapPin />
-                        </Icon>
-                        {selectedLocation || 'Chọn khu vực'}
-                        <Icon size='md'>
-                          <HiOutlineChevronDown />
-                        </Icon>
-                      </Button>
-                    </Menu.Trigger>
-                    <Portal>
-                      <Menu.Positioner>
-                        <Menu.Content>
-                          <Menu.Item value='all' onClick={() => setSelectedLocation('')}>
-                            Tất cả
-                          </Menu.Item>
-                          {locations.map(loc => (
-                            <Menu.Item
-                              key={loc.id}
-                              value={loc.id}
-                              onClick={() => setSelectedLocation(loc.name)}
-                            >
-                              {loc.name}
-                            </Menu.Item>
-                          ))}
-                        </Menu.Content>
-                      </Menu.Positioner>
-                    </Portal>
-                  </Menu.Root>
-
-                  <Menu.Root>
-                    <Menu.Trigger asChild>
-                      <Button
-                        variant='outline'
-                        borderColor='#04113E'
-                        color='#04113E'
-                        borderRadius='6px'
-                        px={5}
-                        py={3}
-                        gap={2}
-                        fontWeight='700'
-                        fontSize='14px'
-                      >
-                        <Icon size='md'>
-                          <FaCar />
-                        </Icon>
-                        {selectedBrand || 'Hãng xe'}
-                        <Icon size='md'>
-                          <HiOutlineChevronDown />
-                        </Icon>
-                      </Button>
-                    </Menu.Trigger>
-                    <Portal>
-                      <Menu.Positioner>
-                        <Menu.Content>
-                          <Menu.Item value='all' onClick={() => setSelectedBrand('')}>
-                            Tất cả
-                          </Menu.Item>
-                          {brands.map(brand => (
-                            <Menu.Item
-                              key={brand.id}
-                              value={brand.id}
-                              onClick={() => setSelectedBrand(brand.name)}
-                            >
-                              {brand.name}
-                            </Menu.Item>
-                          ))}
-                        </Menu.Content>
-                      </Menu.Positioner>
-                    </Portal>
-                  </Menu.Root>
-
-                  <Button
-                    bg='#204ED3'
-                    color='white'
-                    borderRadius='6px'
-                    px={5}
-                    py={3}
-                    fontWeight='700'
-                    fontSize='14px'
-                    _hover={{ bg: '#1a3fb0' }}
-                    type='submit'
-                    disabled={isLoading}
-                    loading={isLoading}
-                  >
-                    Tìm xe ngay
-                  </Button>
-                </Flex>
-              </form>
-            </Box>
-
-            {/* Banner Card */}
-            <Box width='full' height='130px' borderRadius='8px' overflow='hidden'>
-              <Image src={background} alt='Banner' width='100%' height='100%' objectFit='cover' />
-            </Box>
-
-            {/* Brand Logos */}
-            <Box>
-              <HStack gap={4} overflowX='auto' py={2}>
-                {brands.slice(0, DEFAULT_VALUES.BRAND_DISPLAY_LIMIT).map(brand => (
-                  <Box
-                    key={brand.id}
-                    minW='120px'
-                    p={2}
-                    borderRadius='8px'
-                    border='1px solid #E5E5E5'
-                    textAlign='center'
-                    cursor='pointer'
-                    _hover={{ bg: 'gray.50' }}
-                    onClick={() => handleBrandClick(brand.name)}
-                  >
-                    <Box
-                      width='40px'
-                      height='40px'
-                      bg={brand.logoUrl ? 'transparent' : '#204ED3'}
-                      borderRadius='4px'
-                      mx='auto'
-                      mb={2}
-                      display='flex'
-                      alignItems='center'
-                      justifyContent='center'
-                      color='white'
-                      fontWeight='bold'
-                    >
-                      {brand.logoUrl ? (
-                        <Image
-                          src={brand.logoUrl}
-                          alt={brand.name}
-                          width='40px'
-                          height='40px'
-                          objectFit='contain'
-                        />
-                      ) : (
-                        brand.name.charAt(0)
-                      )}
-                    </Box>
-                    <Text fontSize='14px' fontWeight='700' color='#04113E'>
-                      {brand.name}
-                    </Text>
-                  </Box>
-                ))}
-                <RouterLink to={PATHS.PRODUCTS} style={{ textDecoration: 'none' }}>
-                  <Box
-                    minW='120px'
-                    p={2}
-                    borderRadius='8px'
-                    border='1px solid #E5E5E5'
-                    textAlign='center'
-                    cursor='pointer'
-                    _hover={{ bg: 'gray.50' }}
-                  >
-                    <Box
-                      width='40px'
-                      height='36px'
-                      mx='auto'
-                      mb={2}
-                      display='flex'
-                      alignItems='center'
-                      justifyContent='center'
-                      fontSize='20px'
-                      fontWeight='700'
-                      color='#171717'
-                    >
-                      +
-                    </Box>
-                    <Text fontSize='14px' fontWeight='700' color='#04113E'>
-                      Xem thêm
-                    </Text>
-                  </Box>
-                </RouterLink>
-              </HStack>
-            </Box>
-          </VStack>
-        </Box>
+        <SearchSection
+          isLoading={isLoading}
+          onSearch={params => {
+            if (params.brand && Object.keys(params).length === 1) {
+              handleBrandClick(params.brand)
+              return
+            }
+            handleSearch(params)
+          }}
+        />
 
         {/* Features Section */}
         <Box mb={6}>
@@ -526,7 +526,7 @@ export function Home() {
                     flexShrink={0}
                   >
                     <Image
-                      src={recentProducts[0].mediaUrls?.[0]}
+                      src={getFirstImage(recentProducts[0].mediaUrls)}
                       alt={recentProducts[0].title}
                       width='100%'
                       height='100%'
@@ -614,18 +614,13 @@ export function Home() {
                     </HStack>
 
                     <Flex justify='space-between' align='center' mb={4}>
-                      <HStack gap={2}>
-                        <Text
-                          fontSize={{ base: '24px', md: '32px' }}
-                          fontWeight='700'
-                          color='#204ED3'
-                        >
-                          {new Intl.NumberFormat('vi-VN').format(recentProducts[0].price)}
-                        </Text>
-                        <Text fontSize='20px' fontWeight='700' color='#04113E'>
-                          VNĐ
-                        </Text>
-                      </HStack>
+                      <Text
+                        fontSize={{ base: '24px', md: '32px' }}
+                        fontWeight='700'
+                        color='#204ED3'
+                      >
+                        <CurrencyFormat value={recentProducts[0].price} />
+                      </Text>
                     </Flex>
 
                     <Box borderTop='1px solid #E5E7EB' pt={4}>
@@ -662,129 +657,127 @@ export function Home() {
 
             {/* Grid of 7 items */}
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={4}>
-              {recentProducts.slice(1, 8).map(car => (
-                <RouterLink
-                  key={car.id}
-                  to={PATHS.PRODUCT_DETAIL(car.id)}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <Card.Root
-                    bg='white'
-                    borderRadius='16px'
-                    overflow='hidden'
-                    direction='column'
-                    cursor='pointer'
-                    _hover={{ boxShadow: 'lg', transform: 'translateY(-2px)' }}
-                    transition='all 0.3s'
-                    height='100%'
+              {recentProducts.slice(1, 8).map(car => {
+                const firstImage = getFirstImage(car.mediaUrls)
+                return (
+                  <RouterLink
+                    key={car.id}
+                    to={PATHS.PRODUCT_DETAIL(car.id)}
+                    style={{ textDecoration: 'none' }}
                   >
-                    <Box width='100%' height='200px' position='relative' flexShrink={0}>
-                      {car.mediaUrls?.[0] && (
-                        <Image
-                          src={car.mediaUrls[0]}
-                          alt={car.title}
-                          width='100%'
-                          height='100%'
-                          objectFit='cover'
-                        />
-                      )}
-                      <Badge
-                        position='absolute'
-                        top={3}
-                        left={3}
-                        bg='rgba(0,0,0,0.3)'
-                        color='white'
-                        borderRadius='100px'
-                        px={3}
-                        py={1}
-                        gap={1}
-                        display='flex'
-                        alignItems='center'
-                        fontSize='xs'
-                      >
-                        <Icon size='xs'>
-                          <HiOutlineSearch />
-                        </Icon>
-                        {car.mediaUrls?.length ?? 0}
-                      </Badge>
-                    </Box>
-
-                    <Card.Body p={4} flex={1} display='flex' flexDirection='column'>
-                      <Text
-                        fontSize='14px'
-                        fontWeight='700'
-                        color='#04113E'
-                        textTransform='uppercase'
-                        mb={2}
-                        lineHeight='20px'
-                        css={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {car.title}
-                      </Text>
-
-                      <HStack gap={3} mb={3} wrap='wrap' fontSize='12px'>
-                        <HStack gap={1}>
-                          <Icon size='xs' color='#A1A1A1'>
-                            <FaCar />
-                          </Icon>
-                          <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
-                            {car.bodyStyles?.name || DEFAULT_VALUES.NOT_AVAILABLE}
-                          </Text>
-                        </HStack>
-                        <HStack gap={1}>
-                          <Icon size='xs' color='#A1A1A1'>
-                            <FaGasPump />
-                          </Icon>
-                          <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
-                            {car.fuels?.name || DEFAULT_VALUES.NOT_AVAILABLE}
-                          </Text>
-                        </HStack>
-                      </HStack>
-
-                      <Flex justify='space-between' align='center' mb={3}>
-                        <HStack gap={1}>
-                          <Text fontSize='18px' fontWeight='700' color='#204ED3' lineHeight='24px'>
-                            {new Intl.NumberFormat('vi-VN').format(car.price)}
-                          </Text>
-                          <Text fontSize='14px' fontWeight='700' color='#04113E' lineHeight='20px'>
-                            VNĐ
-                          </Text>
-                        </HStack>
-                      </Flex>
-
-                      <Box borderTop='1px solid #E5E7EB' pt={2} mt='auto'>
-                        <Flex
-                          justify='space-between'
-                          align='center'
-                          wrap='wrap'
-                          gap={2}
-                          fontSize='12px'
+                    <Card.Root
+                      bg='white'
+                      borderRadius='16px'
+                      overflow='hidden'
+                      direction='column'
+                      cursor='pointer'
+                      _hover={{ boxShadow: 'lg', transform: 'translateY(-2px)' }}
+                      transition='all 0.3s'
+                      height='100%'
+                    >
+                      <Box width='100%' height='200px' position='relative' flexShrink={0}>
+                        {firstImage && (
+                          <Image
+                            src={firstImage}
+                            alt={car.title}
+                            width='100%'
+                            height='100%'
+                            objectFit='cover'
+                          />
+                        )}
+                        <Badge
+                          position='absolute'
+                          top={3}
+                          left={3}
+                          bg='rgba(0,0,0,0.3)'
+                          color='white'
+                          borderRadius='100px'
+                          px={3}
+                          py={1}
+                          gap={1}
+                          display='flex'
+                          alignItems='center'
+                          fontSize='xs'
                         >
-                          <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
-                            {formatTimeAgo(car.createdAt)}
-                          </Text>
-                          <Badge
-                            bg='#9CA3AF'
-                            color='white'
-                            borderRadius='9999px'
-                            px={2}
-                            py={0.5}
-                            fontSize='11px'
-                            lineHeight='14px'
-                          >
-                            {car.locations?.name || DEFAULT_VALUES.NOT_AVAILABLE}
-                          </Badge>
-                        </Flex>
+                          <Icon size='xs'>
+                            <HiOutlineSearch />
+                          </Icon>
+                          {car.mediaUrls?.length ?? 0}
+                        </Badge>
                       </Box>
-                    </Card.Body>
-                  </Card.Root>
-                </RouterLink>
-              ))}
+
+                      <Card.Body p={4} flex={1} display='flex' flexDirection='column'>
+                        <Text
+                          fontSize='14px'
+                          fontWeight='700'
+                          color='#04113E'
+                          textTransform='uppercase'
+                          mb={2}
+                          lineHeight='20px'
+                          css={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {car.title}
+                        </Text>
+
+                        <HStack gap={3} mb={3} wrap='wrap' fontSize='12px'>
+                          <HStack gap={1}>
+                            <Icon size='xs' color='#A1A1A1'>
+                              <FaCar />
+                            </Icon>
+                            <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
+                              {car.bodyStyles?.name || DEFAULT_VALUES.NOT_AVAILABLE}
+                            </Text>
+                          </HStack>
+                          <HStack gap={1}>
+                            <Icon size='xs' color='#A1A1A1'>
+                              <FaGasPump />
+                            </Icon>
+                            <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
+                              {car.fuels?.name || DEFAULT_VALUES.NOT_AVAILABLE}
+                            </Text>
+                          </HStack>
+                        </HStack>
+
+                        <Flex justify='space-between' align='center' mb={3}>
+                          <Text fontSize='18px' fontWeight='700' color='#204ED3' lineHeight='24px'>
+                            <CurrencyFormat value={car.price} />
+                          </Text>
+                        </Flex>
+
+                        <Box borderTop='1px solid #E5E7EB' pt={2} mt='auto'>
+                          <Flex
+                            justify='space-between'
+                            align='center'
+                            wrap='wrap'
+                            gap={2}
+                            fontSize='12px'
+                          >
+                            <Text fontSize='12px' color='#A1A1A1' lineHeight='18px'>
+                              {formatTimeAgo(car.createdAt)}
+                            </Text>
+                            <Badge
+                              bg='#9CA3AF'
+                              color='white'
+                              borderRadius='9999px'
+                              px={2}
+                              py={0.5}
+                              fontSize='11px'
+                              lineHeight='14px'
+                            >
+                              {car.locations?.name || DEFAULT_VALUES.NOT_AVAILABLE}
+                            </Badge>
+                          </Flex>
+                        </Box>
+                      </Card.Body>
+                    </Card.Root>
+                  </RouterLink>
+                )
+              })}
             </SimpleGrid>
           </VStack>
 

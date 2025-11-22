@@ -60,6 +60,10 @@ export type ProductDetailData = {
   weight: string | null
   payload: string | null
   groundClearance: string | null
+  specs?: Array<{
+    name: string
+    value: string
+  }> | null
 }
 
 export type ProductFilters = {
@@ -128,7 +132,7 @@ export type NewCarModel = {
   brand: string
   name: string
   year: string
-  priceRange: string
+  price: number
   image: string
   modelId: string | null
   models?: { name: string } | null

@@ -11,7 +11,7 @@ import {
   HStack
 } from '@chakra-ui/react'
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, Link as RouterLink } from 'react-router'
 import { getNewCarModels } from '@/api/products'
 import { useToast } from '@/hooks/useToast'
 import type { NewCarModel } from '@/types/products'
@@ -19,14 +19,9 @@ import { DEFAULT_VALUES } from '@/configs/constants'
 import { PATHS } from '@/configs/paths'
 import { useMasterData } from '@/hooks/useMasterData'
 import { normalizeRelation } from '@/utils/products'
-
-const buildProductsPath = (params?: { status?: string }) => {
-  if (!params) return PATHS.PRODUCTS
-  const searchParams = new URLSearchParams()
-  if (params.status) searchParams.set('status', params.status)
-  const queryString = searchParams.toString()
-  return queryString ? `${PATHS.PRODUCTS}?${queryString}` : PATHS.PRODUCTS
-}
+import { CurrencyFormat } from '@/components/ui/currency-format'
+import { getFirstImage } from '@/utils/media'
+import { buildProductsPath } from '@/utils/paths'
 
 export function NewCarModelsSection() {
   const navigate = useNavigate()
@@ -88,8 +83,10 @@ export function NewCarModelsSection() {
                 brand: brandName,
                 name: modelName,
                 year: camelized.yearManufactured || '',
-                priceRange: '',
-                image: (camelized.mediaUrls as string[] | null)?.[0] || '',
+                image:
+                  getFirstImage(
+                    (camelized.mediaUrls as string[] | null | undefined) ?? undefined
+                  ) || '',
                 modelId: camelized.modelId,
                 models: models,
                 brandId: camelized.brandId,
@@ -98,34 +95,33 @@ export function NewCarModelsSection() {
             }
             const model = acc[key]
             if (model && model.prices) {
-              model.prices.push(camelized.price)
+              if (typeof camelized.price === 'number') {
+                model.prices.push(camelized.price)
+              }
             }
             return acc
           },
-          {} as Record<string, NewCarModel & { prices: number[] }>
+          {} as Record<string, Omit<NewCarModel, 'price'> & { prices: number[] }>
         )
 
-        const models = Object.values(grouped).map(model => {
-          const prices = model.prices
-          const min = Math.min(...prices)
-          const max = Math.max(...prices)
-          const minFormatted = new Intl.NumberFormat('vi-VN', {
-            notation: 'compact',
-            compactDisplay: 'short',
-            maximumFractionDigits: 0
-          }).format(min)
-          const maxFormatted = new Intl.NumberFormat('vi-VN', {
-            notation: 'compact',
-            compactDisplay: 'short',
-            maximumFractionDigits: 0
-          }).format(max)
-          return {
-            ...model,
-            priceRange: min === max ? `${minFormatted}` : `${minFormatted} - ${maxFormatted}`
-          }
-        })
+        const models = Object.values(grouped)
+          .map(model => {
+            const { prices, ...rest } = model
+            if (!prices.length) {
+              return {
+                ...rest,
+                price: 0
+              }
+            }
+            const min = Math.min(...prices)
+            return {
+              ...rest,
+              price: min
+            }
+          })
+          .slice(0, DEFAULT_VALUES.NEW_CAR_MODELS_DISPLAY_LIMIT)
 
-        setNewCarModels(models.slice(0, DEFAULT_VALUES.NEW_CAR_MODELS_DISPLAY_LIMIT))
+        setNewCarModels(models)
       } catch (error) {
         toast.error('Đã xảy ra lỗi', {
           title: 'Lỗi tải dòng xe mới'
@@ -181,36 +177,44 @@ export function NewCarModelsSection() {
             ) : (
               <SimpleGrid columns={{ base: 1, md: 4 }} gap={5}>
                 {newCarModels.map(car => (
-                  <Card.Root key={car.id} bg='white' borderRadius='16px' overflow='hidden'>
-                    <Image
-                      src={car.image}
-                      alt={car.name}
-                      width='100%'
-                      height='153px'
-                      objectFit='cover'
-                    />
-                    <Card.Body p={4}>
-                      <HStack gap={2} mb={2}>
-                        <Badge bg='#204ED3' color='white' borderRadius='8px' px={2} py={1}>
-                          {car.brand}
-                        </Badge>
-                        <Text fontSize='md' color='#04113E'>
-                          {car.year}
+                  <RouterLink
+                    key={car.id}
+                    to={PATHS.PRODUCT_DETAIL(car.id)}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Card.Root
+                      bg='white'
+                      borderRadius='16px'
+                      overflow='hidden'
+                      cursor='pointer'
+                      _hover={{ boxShadow: 'lg', transform: 'translateY(-2px)' }}
+                      transition='all 0.3s'
+                    >
+                      <Image
+                        src={car.image}
+                        alt={car.name}
+                        width='100%'
+                        height='153px'
+                        objectFit='cover'
+                      />
+                      <Card.Body p={4}>
+                        <HStack gap={2} mb={2}>
+                          <Badge bg='#204ED3' color='white' borderRadius='8px' px={2} py={1}>
+                            {car.brand}
+                          </Badge>
+                          <Text fontSize='md' color='#04113E'>
+                            {car.year}
+                          </Text>
+                        </HStack>
+                        <Text fontSize='xl' fontWeight='700' color='#04113E' mb={2}>
+                          {car.name}
                         </Text>
-                      </HStack>
-                      <Text fontSize='xl' fontWeight='700' color='#04113E' mb={2}>
-                        {car.name}
-                      </Text>
-                      <HStack gap={2}>
                         <Text fontSize='md' fontWeight='700' color='#204ED3'>
-                          {car.priceRange}
+                          <CurrencyFormat value={car.price} />
                         </Text>
-                        <Text fontSize='sm' color='#204ED3'>
-                          VNĐ
-                        </Text>
-                      </HStack>
-                    </Card.Body>
-                  </Card.Root>
+                      </Card.Body>
+                    </Card.Root>
+                  </RouterLink>
                 ))}
               </SimpleGrid>
             )}

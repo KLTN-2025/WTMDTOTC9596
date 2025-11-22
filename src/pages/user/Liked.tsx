@@ -8,7 +8,6 @@ import {
   HStack,
   Icon,
   Image,
-  NativeSelect,
   Text,
   VStack
 } from '@chakra-ui/react'
@@ -25,6 +24,7 @@ import { SORT_OPTIONS } from '@/mocks/products'
 import { PATHS } from '@/configs/paths'
 import { DEFAULT_VALUES } from '@/configs/constants'
 import { useAuth } from '@/hooks/useAuth'
+import { SortSelect } from '@/components/common/SortSelect'
 const ITEMS_PER_PAGE = 12
 
 type FavoriteItem = {
@@ -144,42 +144,16 @@ export function Liked() {
             Tổng {sorted.length} tin đã thích
           </Text>
           <HStack gap={5}>
-            <Text fontSize='18px' fontWeight='400' color='#737373' textWrap='nowrap'>
-              Xắp xếp theo
-            </Text>
-            <NativeSelect.Root
-              size='md'
-              maxW='200px'
+            <SortSelect
+              value={sortBy}
+              options={SORT_OPTIONS}
               minW='150px'
-              onChange={e => {
-                const v = (e.target as HTMLSelectElement).value
-                const sortOption = SORT_OPTIONS.find(opt => opt.label === v)
-                if (sortOption) {
-                  setSortBy(sortOption.value)
-                  setCurrentPage(1)
-                }
+              maxW='200px'
+              onChange={value => {
+                setSortBy(value as 'newest' | 'price_asc' | 'price_desc')
+                setCurrentPage(1)
               }}
-            >
-              <NativeSelect.Field
-                bg='white'
-                borderColor='#E5E5E5'
-                borderRadius='8px'
-                px={4}
-                py={2}
-                value={
-                  sortBy === 'newest'
-                    ? 'Tin mới nhất'
-                    : sortBy === 'price_asc'
-                      ? 'Giá tăng dần'
-                      : 'Giá giảm dần'
-                }
-              >
-                {SORT_OPTIONS.map(opt => (
-                  <option key={opt.value}>{opt.label}</option>
-                ))}
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
+            />
           </HStack>
         </Flex>
 

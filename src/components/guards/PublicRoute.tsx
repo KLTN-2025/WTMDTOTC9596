@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Navigate } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
+import { PATHS } from '@/configs/paths'
 
 interface PublicRouteProps {
   children: ReactNode
@@ -10,7 +11,7 @@ interface PublicRouteProps {
 
 export function PublicRoute({
   children,
-  redirectTo = '/',
+  redirectTo = PATHS.ROOT,
   redirectIfAuthenticated = false
 }: PublicRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()

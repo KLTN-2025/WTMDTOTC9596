@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { Box, Spinner, Text, VStack } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
+import { PATHS } from '@/configs/paths'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -9,7 +10,11 @@ interface ProtectedRouteProps {
   fallback?: ReactNode
 }
 
-export function ProtectedRoute({ children, redirectTo = '/login', fallback }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  redirectTo = PATHS.LOGIN,
+  fallback
+}: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
 

@@ -9,7 +9,7 @@ interface AuthInitializerProps {
 
 export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const dispatch = useAppDispatch()
-  const { initialized } = useAppSelector(state => state.auth)
+  const { initialized, profile, store } = useAppSelector(state => state.auth)
 
   useEffect(() => {
     if (!initialized) {
@@ -26,7 +26,9 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
             session: session
           })
         )
-        dispatch(fetchUserData(session.user))
+        if (!profile || !store) {
+          dispatch(fetchUserData(session.user))
+        }
       } else {
         dispatch(clearAuth())
       }

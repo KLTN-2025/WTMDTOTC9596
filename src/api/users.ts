@@ -1,6 +1,7 @@
-import { supabase, lambdaSupabase } from '@/configs/supabase'
+import { supabase } from '@/configs/supabase'
 import { TABLES } from '@/configs/db'
-import camelcaseKeys from 'camelcase-keys'
+import camelcaseKeys, { type ObjectLike } from 'camelcase-keys'
+import snakecaseKeys from 'snakecase-keys'
 
 export type AdminUser = {
   id: string
@@ -10,10 +11,13 @@ export type AdminUser = {
   address: string | null
   avatarUrl: string | null
   role: 'buyer' | 'seller' | 'admin'
+  status: 'active' | 'banned'
   createdAt: string
   updatedAt: string
   banned: boolean
 }
+
+type ProfileRow = Omit<AdminUser, 'banned'>
 
 export type CreateUserData = {
   phone: string
@@ -29,6 +33,27 @@ export type UpdateUserData = {
   phone?: string
   address?: string
   role?: 'buyer' | 'seller' | 'admin'
+  status?: 'active' | 'banned'
+}
+
+const normalizeProfile = (data: unknown): AdminUser => {
+  const camelized = camelcaseKeys(data as ObjectLike, { deep: true }) as ProfileRow
+  const status = (camelized.status || 'active') as AdminUser['status']
+  return {
+    ...camelized,
+    status,
+    banned: status === 'banned'
+  }
+}
+
+const getProfileById = async (userId: string) => {
+  const { data, error } = await supabase.from(TABLES.PROFILES).select('*').eq('id', userId).single()
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: normalizeProfile(data), error: null }
 }
 
 export const getUsers = async (options?: {
@@ -63,49 +88,23 @@ export const getUsers = async (options?: {
     return { data: null, error, totalCount: 0 }
   }
 
-  const userIds = (data ?? []).map(item => item.id)
-  let bannedUsers = new Set<string>()
-
-  if (userIds.length > 0) {
-    try {
-      const { data: responseData, error } = await lambdaSupabase.functions.invoke('admin-users', {
-        body: {
-          action: 'check-banned',
-          userIds: userIds.join(',')
-        }
-      })
-
-      if (!error && responseData?.data) {
-        responseData.data.forEach((userId: string) => {
-          bannedUsers.add(userId)
-        })
-      }
-    } catch {
-      // Ignore error if edge function is not available
-    }
-  }
-
-  const normalized = (data ?? []).map(item => {
-    const camelized = camelcaseKeys(item, { deep: true }) as any
-    return {
-      ...camelized,
-      banned: bannedUsers.has(camelized.id)
-    }
-  })
+  const normalized = (data ?? []).map(normalizeProfile)
 
   return { data: normalized, error: null, totalCount: count || 0 }
 }
 
 export const createUser = async (userData: CreateUserData) => {
-  const { data: responseData, error } = await lambdaSupabase.functions.invoke('admin-users', {
-    body: {
-      action: 'create',
-      phone: userData.phone,
-      password: userData.password,
-      email: userData.email,
-      fullName: userData.fullName,
-      role: userData.role || 'buyer'
-    }
+  const payload = snakecaseKeys({
+    phone: userData.phone,
+    password: userData.password,
+    email: userData.email,
+    fullName: userData.fullName,
+    role: userData.role || 'buyer'
+  })
+
+  const { data: responseData, error } = await supabase.functions.invoke('users', {
+    method: 'POST',
+    body: payload
   })
 
   if (error) {
@@ -116,68 +115,27 @@ export const createUser = async (userData: CreateUserData) => {
     return { data: null, error: { message: responseData.error } }
   }
 
-  const camelized = camelcaseKeys(responseData.data, { deep: true }) as AdminUser
-  return { data: { ...camelized, banned: false }, error: null }
+  return { data: normalizeProfile(responseData.data), error: null }
 }
 
 export const updateUser = async (userId: string, updateData: UpdateUserData) => {
-  const updatePayload: any = {
-    updated_at: new Date().toISOString()
-  }
-
-  if (updateData.fullName !== undefined) {
-    updatePayload.full_name = updateData.fullName
-  }
-  if (updateData.email !== undefined) {
-    updatePayload.email = updateData.email
-  }
-  if (updateData.phone !== undefined) {
-    updatePayload.phone = updateData.phone
-  }
-  if (updateData.address !== undefined) {
-    updatePayload.address = updateData.address
-  }
-  if (updateData.role !== undefined) {
-    updatePayload.role = updateData.role
-  }
-
-  const { data, error } = await supabase
-    .from(TABLES.PROFILES)
-    .update(updatePayload)
-    .eq('id', userId)
-    .select()
-    .single()
-
-  if (error) {
-    return { data: null, error }
-  }
-
-  if (updateData.email || updateData.phone) {
-    try {
-      await lambdaSupabase.functions.invoke('admin-users', {
-        body: {
-          action: 'update-auth',
-          userId,
-          email: updateData.email,
-          phone: updateData.phone
-        }
-      })
-    } catch {
-      // Ignore auth update errors
-    }
-  }
-
-  const camelized = camelcaseKeys(data, { deep: true }) as AdminUser
-  return { data: { ...camelized, banned: false }, error: null }
-}
-
-export const banUser = async (userId: string, ban: boolean) => {
-  const { data: responseData, error } = await lambdaSupabase.functions.invoke('admin-users', {
-    body: {
-      action: 'ban',
+  const cleanedPayload = Object.fromEntries(
+    Object.entries({
       userId,
-      ban
-    }
+      fullName: updateData.fullName,
+      email: updateData.email,
+      phone: updateData.phone,
+      address: updateData.address,
+      role: updateData.role,
+      status: updateData.status
+    }).filter(([, value]) => value !== undefined && value !== null)
+  )
+
+  const payload = snakecaseKeys(cleanedPayload)
+
+  const { data: responseData, error } = await supabase.functions.invoke('users', {
+    method: 'PUT',
+    body: payload
   })
 
   if (error) {
@@ -188,5 +146,9 @@ export const banUser = async (userId: string, ban: boolean) => {
     return { data: null, error: { message: responseData.error } }
   }
 
-  return { data: responseData.data, error: null }
+  return getProfileById(userId)
+}
+
+export const banUser = async (userId: string, ban: boolean) => {
+  return updateUser(userId, { status: ban ? 'banned' : 'active' })
 }

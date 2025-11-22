@@ -5,7 +5,6 @@ export const TABLES = {
   PRODUCT_REACTIONS: 'product_reactions',
   TEST_DRIVE_BOOKINGS: 'test_drive_bookings',
   BRANDS: 'brands',
-  CATEGORIES: 'categories',
   LOCATIONS: 'locations',
   FUELS: 'fuels',
   TRANSMISSIONS: 'transmissions',

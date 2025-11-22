@@ -1,4 +1,5 @@
 export const PATHS = {
+  ROOT: '/',
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
@@ -20,5 +21,11 @@ export const PATHS = {
   },
   STORES: '/stores',
   TEST_DRIVES: '/test-drives',
-  CUSTOMER_CONTACTS: '/customer-contacts'
+  CUSTOMER_CONTACTS: '/customer-contacts',
+  ADMIN: {
+    ROOT: '/admin',
+    USERS: '/admin/users',
+    CATEGORIES: '/admin/categories',
+    CAR_LISTINGS: '/admin/car-listings'
+  }
 } as const

@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import type { RouteObject } from 'react-router'
 import { Layout } from '@/components/layout/Layout'
+import { AdminLayout } from '@/components/layout/AdminLayout'
 import {
   Login,
   Register,
@@ -11,13 +12,20 @@ import {
   ManageListings,
   ProductDetail,
   TestDriveBooking,
+  TestDrives,
+  CustomerContacts,
   UsedCars,
   SoldCars,
   Sell,
   Stores,
+  Dashboard,
+  Users,
+  Categories,
+  CarListings,
   StoreRegistration
 } from '@/pages'
 import { createGuardedRoute, routeGuards } from './guards'
+import { USER_ROLE } from '@/configs/constants'
 
 const routes: RouteObject[] = [
   {
@@ -61,12 +69,29 @@ const routes: RouteObject[] = [
         element: createGuardedRoute(<TestDriveBooking />, routeGuards.protected)
       },
       {
+        path: 'test-drives',
+        element: createGuardedRoute(
+          <TestDrives />,
+          routeGuards.role([USER_ROLE.SELLER, USER_ROLE.ADMIN])
+        )
+      },
+      {
+        path: 'customer-contacts',
+        element: createGuardedRoute(
+          <CustomerContacts />,
+          routeGuards.role([USER_ROLE.SELLER, USER_ROLE.ADMIN])
+        )
+      },
+      {
         path: 'favorites',
         element: createGuardedRoute(<Liked />, routeGuards.protected)
       },
       {
         path: 'manage-listings',
-        element: createGuardedRoute(<ManageListings />, routeGuards.protected)
+        element: createGuardedRoute(
+          <ManageListings />,
+          routeGuards.role([USER_ROLE.SELLER, USER_ROLE.ADMIN])
+        )
       },
       {
         path: 'sell',
@@ -79,6 +104,28 @@ const routes: RouteObject[] = [
       {
         path: 'store-registration',
         element: createGuardedRoute(<StoreRegistration />, routeGuards.protected)
+      }
+    ]
+  },
+  {
+    path: '/admin',
+    element: createGuardedRoute(<AdminLayout />, routeGuards.role([USER_ROLE.ADMIN])),
+    children: [
+      {
+        index: true,
+        element: createGuardedRoute(<Dashboard />, routeGuards.role([USER_ROLE.ADMIN]))
+      },
+      {
+        path: 'users',
+        element: createGuardedRoute(<Users />, routeGuards.role([USER_ROLE.ADMIN]))
+      },
+      {
+        path: 'categories',
+        element: createGuardedRoute(<Categories />, routeGuards.role([USER_ROLE.ADMIN]))
+      },
+      {
+        path: 'car-listings',
+        element: createGuardedRoute(<CarListings />, routeGuards.role([USER_ROLE.ADMIN]))
       }
     ]
   }

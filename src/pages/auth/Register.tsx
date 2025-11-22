@@ -13,6 +13,8 @@ import {
 } from '@chakra-ui/react'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import { PasswordInput } from '@/components/ui/password-input'
 import { useToast } from '@/hooks/useToast'
@@ -20,16 +22,27 @@ import { register } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
 import { SellCarSection } from '@/components/common/SellCarSection.tsx'
+import { PATHS } from '@/configs/paths'
+import { useAppDispatch } from '@/stores/hooks'
+import { fetchUserData } from '@/stores/auth/authSlice'
 
-interface RegisterFormData {
-  fullName: string
-  phone: string
-  password: string
-  agreeToTerms: boolean
-}
+const registerSchema = z.object({
+  fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
+  phone: z
+    .string()
+    .min(1, 'Số điện thoại là bắt buộc')
+    .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  agreeToTerms: z.boolean().refine(value => value === true, {
+    message: 'Bạn phải đồng ý với các điều khoản'
+  })
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
 
 export function Register() {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const toast = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const {
@@ -38,7 +51,11 @@ export function Register() {
     formState: { errors },
     control
   } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      fullName: '',
+      phone: '',
+      password: '',
       agreeToTerms: false
     }
   })
@@ -59,7 +76,8 @@ export function Register() {
         toast.success('Tài khoản của bạn đã được tạo thành công', {
           title: 'Đăng ký thành công'
         })
-        navigate('/login')
+        dispatch(fetchUserData(authData.user))
+        navigate(PATHS.HOME)
       }
     } catch (error) {
       toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
@@ -132,13 +150,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...registerField('fullName', {
-                        required: 'Họ và tên là bắt buộc',
-                        minLength: {
-                          value: 2,
-                          message: 'Họ và tên phải có ít nhất 2 ký tự'
-                        }
-                      })}
+                      {...registerField('fullName')}
                     />
                     {errors.fullName && (
                       <Field.ErrorText>{errors.fullName.message}</Field.ErrorText>
@@ -155,13 +167,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...registerField('phone', {
-                        required: 'Số điện thoại là bắt buộc',
-                        pattern: {
-                          value: /^[0-9]{10,11}$/,
-                          message: 'Số điện thoại không hợp lệ'
-                        }
-                      })}
+                      {...registerField('phone')}
                     />
                     {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
                   </Field.Root>
@@ -176,13 +182,7 @@ export function Register() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...registerField('password', {
-                        required: 'Mật khẩu là bắt buộc',
-                        minLength: {
-                          value: 6,
-                          message: 'Mật khẩu phải có ít nhất 6 ký tự'
-                        }
-                      })}
+                      {...registerField('password')}
                     />
                     {errors.password && (
                       <Field.ErrorText>{errors.password.message}</Field.ErrorText>
@@ -194,9 +194,6 @@ export function Register() {
                       <Controller
                         control={control}
                         name='agreeToTerms'
-                        rules={{
-                          required: 'Bạn phải đồng ý với các điều khoản'
-                        }}
                         render={({ field }) => (
                           <Checkbox.Root
                             checked={field.value}
@@ -251,7 +248,7 @@ export function Register() {
               </form>
 
               <Link asChild>
-                <RouterLink to='/login'>
+                <RouterLink to={PATHS.LOGIN}>
                   <Text
                     fontSize='sm'
                     color='#204ED3'

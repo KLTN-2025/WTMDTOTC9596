@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/hooks/useAuth'
 import logo from '@/assets/images/logo.png'
 import { PATHS } from '@/configs/paths'
+import { ProtectedComponent } from '../guards'
+import { USER_ROLE } from '@/configs/constants'
 
 export function Header() {
   const navigate = useNavigate()
@@ -28,7 +30,7 @@ export function Header() {
       toast.success('Bạn đã đăng xuất khỏi tài khoản', {
         title: 'Đăng xuất thành công'
       })
-      navigate('/')
+      navigate(PATHS.HOME)
     } catch (error) {
       toast.error('Đã xảy ra lỗi, vui lòng thử lại', {
         title: 'Lỗi đăng xuất'
@@ -48,7 +50,7 @@ export function Header() {
           gap={6}
         >
           <HStack gap={6}>
-            <RouterLink to='/'>
+            <RouterLink to={PATHS.HOME}>
               <Image src={logo} alt='Logo' height='28px' objectFit='contain' />
             </RouterLink>
           </HStack>
@@ -60,7 +62,7 @@ export function Header() {
 
           <HStack gap={4}>
             {!isAuthenticated ? (
-              <RouterLink to='/login'>
+              <RouterLink to={PATHS.LOGIN}>
                 <Button
                   variant='outline'
                   colorPalette='blue'
@@ -120,36 +122,47 @@ export function Header() {
                   <Portal>
                     <Menu.Positioner>
                       <Menu.Content minW='200px'>
-                        <Menu.Item
-                          value='manage-listings'
-                          onClick={() => navigate(PATHS.USER.MANAGE_LISTINGS)}
-                        >
-                          <Icon>
-                            <HiOutlineClipboardDocumentList />
-                          </Icon>
-                          Quản lý tin
-                        </Menu.Item>
-                        <Menu.Item value='test-drives' onClick={() => navigate(PATHS.TEST_DRIVES)}>
-                          <Icon>
-                            <FiCalendar />
-                          </Icon>
-                          Quản lý lịch hẹn
-                        </Menu.Item>
-                        <Menu.Item
-                          value='customer-contacts'
-                          onClick={() => navigate(PATHS.CUSTOMER_CONTACTS)}
-                        >
-                          <Icon>
-                            <FiUsers />
-                          </Icon>
-                          Danh sách khách hàng
-                        </Menu.Item>
-                        <Menu.Item value='admin' onClick={() => navigate('/admin')}>
-                          <Icon>
-                            <FiShield />
-                          </Icon>
-                          Admin
-                        </Menu.Item>
+                        <ProtectedComponent roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}>
+                          <Menu.Item
+                            value='manage-listings'
+                            onClick={() => navigate(PATHS.USER.MANAGE_LISTINGS)}
+                          >
+                            <Icon>
+                              <HiOutlineClipboardDocumentList />
+                            </Icon>
+                            Quản lý tin
+                          </Menu.Item>
+                        </ProtectedComponent>
+                        <ProtectedComponent roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}>
+                          <Menu.Item
+                            value='test-drives'
+                            onClick={() => navigate(PATHS.TEST_DRIVES)}
+                          >
+                            <Icon>
+                              <FiCalendar />
+                            </Icon>
+                            Quản lý lịch hẹn
+                          </Menu.Item>
+                        </ProtectedComponent>
+                        <ProtectedComponent roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}>
+                          <Menu.Item
+                            value='customer-contacts'
+                            onClick={() => navigate(PATHS.CUSTOMER_CONTACTS)}
+                          >
+                            <Icon>
+                              <FiUsers />
+                            </Icon>
+                            Danh sách khách hàng
+                          </Menu.Item>
+                        </ProtectedComponent>
+                        <ProtectedComponent roles={[USER_ROLE.ADMIN]}>
+                          <Menu.Item value='admin' onClick={() => navigate(PATHS.ADMIN.ROOT)}>
+                            <Icon>
+                              <FiShield />
+                            </Icon>
+                            Admin
+                          </Menu.Item>
+                        </ProtectedComponent>
                         <Menu.Item value='logout' onClick={handleLogout}>
                           <Icon>
                             <FiLogOut />
@@ -200,7 +213,12 @@ export function Header() {
             <Portal>
               <Menu.Positioner>
                 <Menu.Content minW='260px' py={2} borderRadius='8px' boxShadow='lg'>
-                  <Menu.Item value='all-cars' onClick={() => navigate('/products')} py={3} px={4}>
+                  <Menu.Item
+                    value='all-cars'
+                    onClick={() => navigate(PATHS.PRODUCTS)}
+                    py={3}
+                    px={4}
+                  >
                     <Icon size='lg' color='#204ED3'>
                       <IoCarSportOutline />
                     </Icon>
@@ -208,7 +226,12 @@ export function Header() {
                       Tất cả các xe
                     </Text>
                   </Menu.Item>
-                  <Menu.Item value='used-cars' onClick={() => navigate('/used-cars')} py={3} px={4}>
+                  <Menu.Item
+                    value='used-cars'
+                    onClick={() => navigate(PATHS.USED_CARS)}
+                    py={3}
+                    px={4}
+                  >
                     <Icon size='lg' color='#204ED3'>
                       <IoCarSportOutline />
                     </Icon>
@@ -218,7 +241,7 @@ export function Header() {
                   </Menu.Item>
                   <Menu.Item
                     value='new-cars'
-                    onClick={() => navigate('/products?status=new')}
+                    onClick={() => navigate(`${PATHS.PRODUCTS}?status=new`)}
                     py={3}
                     px={4}
                   >
@@ -229,7 +252,12 @@ export function Header() {
                       Xe mới
                     </Text>
                   </Menu.Item>
-                  <Menu.Item value='sold-cars' onClick={() => navigate('/sold-cars')} py={3} px={4}>
+                  <Menu.Item
+                    value='sold-cars'
+                    onClick={() => navigate(PATHS.SOLD_CARS)}
+                    py={3}
+                    px={4}
+                  >
                     <Icon size='lg' color='#204ED3'>
                       <IoCarSportOutline />
                     </Icon>
@@ -237,7 +265,7 @@ export function Header() {
                       Xe đã bán
                     </Text>
                   </Menu.Item>
-                  <Menu.Item value='stores' onClick={() => navigate('/stores')} py={3} px={4}>
+                  <Menu.Item value='stores' onClick={() => navigate(PATHS.STORES)} py={3} px={4}>
                     <Icon size='lg' color='#204ED3'>
                       <IoStorefrontOutline />
                     </Icon>
@@ -245,7 +273,12 @@ export function Header() {
                       Cửa hàng
                     </Text>
                   </Menu.Item>
-                  <Menu.Item value='favorites' onClick={() => navigate('/favorites')} py={3} px={4}>
+                  <Menu.Item
+                    value='favorites'
+                    onClick={() => navigate(PATHS.FAVORITES)}
+                    py={3}
+                    px={4}
+                  >
                     <Icon size='lg' color='#204ED3'>
                       <HiOutlineHeart />
                     </Icon>
@@ -273,7 +306,7 @@ export function Header() {
               fontSize='sm'
               asChild
             >
-              <RouterLink to='/used-cars'>
+              <RouterLink to={PATHS.USED_CARS}>
                 <Icon size='md'>
                   <IoCarSportOutline />
                 </Icon>
@@ -294,7 +327,7 @@ export function Header() {
               fontSize='sm'
               asChild
             >
-              <RouterLink to='/sold-cars'>
+              <RouterLink to={PATHS.SOLD_CARS}>
                 <Icon size='md'>
                   <IoCarSportOutline />
                 </Icon>
@@ -317,7 +350,7 @@ export function Header() {
               borderColor='transparent'
               asChild
             >
-              <RouterLink to='/stores'>
+              <RouterLink to={PATHS.STORES}>
                 <Icon size='md'>
                   <IoStorefrontOutline />
                 </Icon>
@@ -338,7 +371,7 @@ export function Header() {
               fontSize='sm'
               asChild
             >
-              <RouterLink to='/favorites'>
+              <RouterLink to={PATHS.FAVORITES}>
                 <Icon size='md'>
                   <HiOutlineHeart />
                 </Icon>

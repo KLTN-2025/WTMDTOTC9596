@@ -13,6 +13,8 @@ import {
 } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router'
 import { FaFacebook, FaGoogle } from 'react-icons/fa'
 import { PasswordInput } from '@/components/ui/password-input'
@@ -21,11 +23,17 @@ import { login } from '@/api/auth'
 import logo from '@/assets/images/logo.png'
 import banner from '@/assets/images/banner.png'
 import { SellCarSection } from '@/components/common/SellCarSection.tsx'
+import { PATHS } from '@/configs/paths'
 
-interface LoginFormData {
-  phone: string
-  password: string
-}
+const loginSchema = z.object({
+  phone: z
+    .string()
+    .min(1, 'Số điện thoại là bắt buộc')
+    .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 export function Login() {
   const navigate = useNavigate()
@@ -36,7 +44,13 @@ export function Login() {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<LoginFormData>()
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      phone: '0999999999',
+      password: 'admin123'
+    }
+  })
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
@@ -126,13 +140,7 @@ export function Login() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...register('phone', {
-                        required: 'Số điện thoại là bắt buộc',
-                        pattern: {
-                          value: /^[0-9]{10,11}$/,
-                          message: 'Số điện thoại không hợp lệ'
-                        }
-                      })}
+                      {...register('phone')}
                     />
                     {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
                   </Field.Root>
@@ -147,13 +155,7 @@ export function Login() {
                       py={2}
                       fontSize='md'
                       color='#737373'
-                      {...register('password', {
-                        required: 'Mật khẩu là bắt buộc',
-                        minLength: {
-                          value: 6,
-                          message: 'Mật khẩu phải có ít nhất 6 ký tự'
-                        }
-                      })}
+                      {...register('password')}
                     />
                     {errors.password && (
                       <Field.ErrorText>{errors.password.message}</Field.ErrorText>
@@ -220,7 +222,7 @@ export function Login() {
                 </HStack>
 
                 <Link asChild>
-                  <RouterLink to='/register'>
+                  <RouterLink to={PATHS.REGISTER}>
                     <Text
                       fontSize='sm'
                       color='#204ED3'

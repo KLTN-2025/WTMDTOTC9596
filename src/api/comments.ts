@@ -136,27 +136,7 @@ export const createComment = async (commentData: CreateCommentData, user: User |
     return { data: null, error }
   }
 
-  const camelized = camelcaseKeys(data, { deep: true }) as any
-  const { data: profileData } = await supabase
-    .from(TABLES.PROFILES)
-    .select('id, full_name, avatar_url')
-    .eq('id', user.id)
-    .single()
-
-  const profile = profileData ? camelcaseKeys(profileData, { deep: true }) : null
-  const comment: ProductComment = {
-    ...camelized,
-    user: profile
-      ? {
-          id: profile.id,
-          fullName: profile.fullName || null,
-          avatarUrl: profile.avatarUrl || null
-        }
-      : undefined,
-    replies: []
-  }
-
-  return { data: comment, error: null }
+  return { data: data, error: null }
 }
 
 export const updateComment = async (

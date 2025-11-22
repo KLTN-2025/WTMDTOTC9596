@@ -23,13 +23,16 @@ import { PATHS } from '@/configs/paths'
 import { Link as RouterLink } from 'react-router'
 import { useAppDispatch } from '@/stores/hooks'
 import { fetchUserData } from '@/stores/auth/authSlice'
+import { useMasterData } from '@/hooks/useMasterData'
+import { createMasterDataCollection } from '@/utils/collections'
+import { SelectFieldController } from '@/components/common/SelectField'
 
 const storeSchema = z.object({
   avatarUrl: z.string().url('Ảnh đại diện không hợp lệ').min(1, 'Vui lòng tải ảnh đại diện'),
   bannerUrl: z.string().url('Banner không hợp lệ').or(z.literal('')),
   storeUrl: z.string().url('Vui lòng nhập đường dẫn cửa hàng hợp lệ').or(z.literal('')),
   storeName: z.string().min(2, 'Tên cửa hàng phải có ít nhất 2 ký tự'),
-  storeAddress: z.string().min(5, 'Địa chỉ cửa hàng phải có ít nhất 5 ký tự').or(z.literal('')),
+  storeAddress: z.string().or(z.literal('')),
   zalo: z.string().min(5, 'Zalo không hợp lệ').or(z.literal('')),
   phone: z
     .string()
@@ -46,6 +49,8 @@ export function StoreInfoTab() {
   const { user, store, isLoading: authLoading } = useAuth()
   const dispatch = useAppDispatch()
   const toast = useToast()
+  const { locations } = useMasterData()
+  const locationCollection = useMemo(() => createMasterDataCollection(locations), [locations])
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
@@ -404,23 +409,13 @@ export function StoreInfoTab() {
               {errors.storeName && <Field.ErrorText>{errors.storeName.message}</Field.ErrorText>}
             </Field.Root>
 
-            <Field.Root invalid={!!errors.storeAddress}>
-              <Field.Label>Địa chỉ cửa hàng</Field.Label>
-              <Input
-                placeholder='Nhập địa chỉ cửa hàng'
-                bg='white'
-                borderColor='#E5E5E5'
-                borderRadius='8px'
-                px={4}
-                py={3}
-                fontSize='16px'
-                color='#737373'
-                {...register('storeAddress')}
-              />
-              {errors.storeAddress && (
-                <Field.ErrorText>{errors.storeAddress.message}</Field.ErrorText>
-              )}
-            </Field.Root>
+            <SelectFieldController
+              label='Địa chỉ cửa hàng'
+              collection={locationCollection}
+              control={control}
+              name='storeAddress'
+              placeholder='Chọn địa chỉ cửa hàng'
+            />
 
             <Field.Root invalid={!!errors.zalo}>
               <Field.Label>Zalo</Field.Label>

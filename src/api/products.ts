@@ -11,9 +11,10 @@ import { normalizeRelation } from '@/utils/products'
 import camelcaseKeys from 'camelcase-keys'
 import snakecaseKeys from 'snakecase-keys'
 import type { User } from '@supabase/supabase-js'
+import { PRODUCT_STATUS } from '@/configs/constants'
 export type { ProductListItem, ProductDetailData, ProductFilters }
 
-export const getBrands = async (limit = 12) => {
+export const getBrands = async (limit = Number.MAX_SAFE_INTEGER) => {
   const { data, error } = await supabase
     .from(TABLES.BRANDS)
     .select('*')
@@ -36,7 +37,7 @@ export const getRecentProducts = async (limit = 8) => {
         count: 'exact'
       }
     )
-    .eq('status', 'available')
+    .eq('status', PRODUCT_STATUS.AVAILABLE)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -77,7 +78,7 @@ export const getNewCarModels = async (bodyStyleName?: string, limit = 8) => {
     .from(TABLES.PRODUCTS)
     .select('id,model_id,year_manufactured,price,media_urls,brand_id,brands(name),models(name)')
     .eq('condition_type', 'new')
-    .eq('status', 'available')
+    .eq('status', PRODUCT_STATUS.AVAILABLE)
 
   if (bodyStyleName) {
     const { data: bodyStyleData } = await supabase
@@ -151,7 +152,7 @@ export const getSimilarProducts = async (modelId: string, excludeId: string, lim
   const { data, error } = await supabase
     .from(TABLES.PRODUCTS)
     .select('id,title,price,media_urls,mileage_km,origin,condition_type,warranty_policy')
-    .eq('status', 'available')
+    .eq('status', PRODUCT_STATUS.AVAILABLE)
     .neq('id', excludeId)
     .eq('model_id', modelId)
     .limit(limit)
@@ -173,7 +174,7 @@ export const getSimilarProductsBySpecs = async (
     .select(
       'id,title,price,media_urls,mileage_km,origin,condition_type,warranty_policy,brand_id,fuel_id,transmission_id,body_style_id,drive,power,torque,engine_capacity,fuel_consumption,doors,weight,payload,ground_clearance'
     )
-    .eq('status', 'available')
+    .eq('status', PRODUCT_STATUS.AVAILABLE)
     .neq('id', excludeId)
 
   const productAny = product as any
@@ -241,7 +242,7 @@ export const getRelatedProducts = async (bodyStyleId: string, excludeId: string,
   const { data, error } = await supabase
     .from(TABLES.PRODUCTS)
     .select('id,title,price,media_urls,body_styles(name),fuels(name),transmissions(name)')
-    .eq('status', 'available')
+    .eq('status', PRODUCT_STATUS.AVAILABLE)
     .neq('id', excludeId)
     .eq('body_style_id', bodyStyleId)
     .limit(limit)
@@ -278,7 +279,7 @@ export const getProducts = async (filters: ProductFilters = {}) => {
   if (filters.status) {
     query = query.eq('status', filters.status)
   } else {
-    query = query.eq('status', 'available')
+    query = query.eq('status', PRODUCT_STATUS.AVAILABLE)
   }
 
   if (filters.q) {
@@ -850,6 +851,57 @@ export const createProduct = async (input: CreateProductInput, user: User | null
   )
 
   const { data, error } = await supabase.from(TABLES.PRODUCTS).insert(payload).select().single()
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  const formatted = camelcaseKeys(data, { deep: true })
+  return { data: formatted, error: null }
+}
+
+export const updateProduct = async (
+  productId: string,
+  input: CreateProductInput,
+  user: User | null
+) => {
+  if (!user) {
+    return { data: null, error: { message: 'User not authenticated' } }
+  }
+
+  const payload = snakecaseKeys(
+    {
+      title: input.title,
+      description: input.description,
+      price: input.price,
+      mileageKm: input.mileageKm,
+      conditionType: input.conditionType,
+      origin: input.origin,
+      warrantyPolicy: input.warrantyPolicy,
+      brandId: input.brandId,
+      modelId: input.modelId,
+      yearManufactured: input.yearManufactured,
+      versionId: input.versionId,
+      transmissionId: input.transmissionId,
+      fuelId: input.fuelId,
+      bodyStyleId: input.bodyStyleId,
+      seats: input.seats,
+      colorId: input.colorId,
+      mediaUrls: input.mediaUrls,
+      specs: input.specs,
+      storeId: input.storeId,
+      updatedAt: new Date().toISOString()
+    },
+    { deep: true }
+  )
+
+  let query = supabase.from(TABLES.PRODUCTS).update(payload).eq('id', productId)
+
+  if (input.storeId) {
+    query = query.eq('store_id', input.storeId)
+  }
+
+  const { data, error } = await query.select().single()
 
   if (error) {
     return { data: null, error }

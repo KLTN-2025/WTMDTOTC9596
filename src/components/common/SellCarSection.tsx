@@ -1,12 +1,24 @@
-import { Box, Button, Field, HStack, Icon, NativeSelect, Text, VStack } from '@chakra-ui/react'
+import { Box, Button, HStack, Icon, Text, VStack } from '@chakra-ui/react'
 import {
   HiOutlineCreditCard,
   HiOutlineDocumentText,
   HiOutlineInformationCircle,
   HiOutlineReceiptRefund
 } from 'react-icons/hi2'
+import { useBrandModelSelect } from '@/hooks/useBrandModelSelect'
+import { SelectField } from './SelectField'
 
 export function SellCarSection() {
+  const {
+    selectedBrandId,
+    selectedModelId,
+    setSelectedBrandId,
+    setSelectedModelId,
+    brandCollection,
+    modelCollection,
+    isModelDisabled
+  } = useBrandModelSelect()
+
   return (
     <Box bg='white' borderRadius='12px' p={6} boxShadow='0px 4px 4px rgba(0, 0, 0, 0.25)'>
       <VStack align='stretch' gap={5}>
@@ -16,48 +28,22 @@ export function SellCarSection() {
 
         <Box display='flex' gap={5} flexDirection={{ base: 'column', lg: 'row' }}>
           <VStack flex={1} align='stretch' gap={5}>
-            <Field.Root>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  placeholder='Chọn hãng xe...'
-                  bg='white'
-                  borderColor='#E5E5E5'
-                  borderRadius='8px'
-                  px={4}
-                  py={2}
-                  fontSize='md'
-                  color='#737373'
-                >
-                  <option value=''>Chọn hãng xe...</option>
-                  <option value='toyota'>Toyota</option>
-                  <option value='honda'>Honda</option>
-                  <option value='ford'>Ford</option>
-                  <option value='mazda'>Mazda</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
+            <SelectField
+              label='Hãng xe'
+              collection={brandCollection}
+              value={selectedBrandId}
+              onChange={setSelectedBrandId}
+              placeholder='Chọn hãng xe...'
+            />
 
-            <Field.Root>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  placeholder='Chọn dòng xe...'
-                  bg='#F5F5F5'
-                  borderColor='#E5E5E5'
-                  borderRadius='8px'
-                  px={4}
-                  py={2}
-                  fontSize='md'
-                  color='#737373'
-                >
-                  <option value=''>Chọn dòng xe...</option>
-                  <option value='sedan'>Sedan</option>
-                  <option value='suv'>SUV</option>
-                  <option value='hatchback'>Hatchback</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
+            <SelectField
+              label='Dòng xe'
+              collection={modelCollection}
+              value={selectedModelId}
+              onChange={setSelectedModelId}
+              placeholder={isModelDisabled ? 'Chọn hãng xe trước' : 'Chọn dòng xe...'}
+              disabled={isModelDisabled}
+            />
 
             <Button
               w='full'

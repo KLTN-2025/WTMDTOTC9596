@@ -6,6 +6,7 @@ import type { Product } from '@/types/products'
 import { formatTimeAgo } from '@/utils/date'
 import { PATHS } from '@/configs/paths'
 import { DEFAULT_VALUES } from '@/configs/constants'
+import { getFirstImage } from '@/utils/media'
 
 type ProductCardProps = {
   product: Product
@@ -19,6 +20,7 @@ export function ProductCard({
   showSoldBadge = false
 }: ProductCardProps) {
   const navigate = useNavigate()
+  const firstImage = getFirstImage(product.mediaUrls)
 
   return (
     <Card.Root
@@ -34,9 +36,9 @@ export function ProductCard({
       onClick={() => navigate(PATHS.PRODUCT_DETAIL(product.id))}
     >
       <Box width='40%' flex='0 0 40%' position='relative' flexShrink={0} minH='200px' maxH='300px'>
-        {product.mediaUrls?.[0] && (
+        {firstImage && (
           <Image
-            src={product.mediaUrls[0]}
+            src={firstImage}
             alt={product.title}
             width='100%'
             height='100%'

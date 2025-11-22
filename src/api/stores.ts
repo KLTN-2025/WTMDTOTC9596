@@ -2,7 +2,7 @@ import camelcaseKeys from 'camelcase-keys'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/configs/supabase'
 import { STORAGE_BUCKETS, TABLES } from '@/configs/db'
-import type { Store } from '@/types/stores'
+import type { Store, StoreStats } from '@/types/stores'
 
 export type UpsertStoreInput = {
   name: string
@@ -102,4 +102,46 @@ export const uploadStoreAsset = async (file: File, user: User | null, key: 'logo
   } = supabase.storage.from(STORAGE_BUCKETS.MEDIA).getPublicUrl(filePath)
 
   return { data: { url: publicUrl, path: filePath }, error: null }
+}
+
+export const getStoreStats = async (storeId: string) => {
+  if (!storeId) {
+    return { data: null, error: null }
+  }
+
+  const { data: products, error: productsError } = await supabase
+    .from(TABLES.PRODUCTS)
+    .select('id,status')
+    .eq('store_id', storeId)
+
+  if (productsError) {
+    return { data: null, error: productsError }
+  }
+
+  const productList = products ?? []
+  const selling = productList.filter(product => product.status === 'available').length
+  const sold = productList.filter(product => product.status === 'sold').length
+  const productIds = productList.map(product => product.id).filter(Boolean)
+
+  let favorites = 0
+  if (productIds.length > 0) {
+    const { count, error: reactionsError } = await supabase
+      .from(TABLES.PRODUCT_REACTIONS)
+      .select('id', { count: 'exact', head: true })
+      .in('product_id', productIds)
+      .in('reaction_type', ['happy', 'love'])
+
+    if (reactionsError) {
+      return { data: null, error: reactionsError }
+    }
+    favorites = count ?? 0
+  }
+
+  const stats: StoreStats = {
+    selling,
+    sold,
+    favorites
+  }
+
+  return { data: stats, error: null }
 }
