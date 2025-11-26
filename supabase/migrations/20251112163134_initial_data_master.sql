@@ -22,17 +22,6 @@ INSERT INTO public.brands (name, logo_url) VALUES
   ('Porsche', NULL)
 ON CONFLICT (name) DO NOTHING;
 
--- Insert Categories
-INSERT INTO public.categories (name) VALUES
-  ('Xe con'),
-  ('Xe SUV'),
-  ('Xe bán tải'),
-  ('Xe tải'),
-  ('Xe khách'),
-  ('Xe điện'),
-  ('Xe hybrid')
-ON CONFLICT (name) DO NOTHING;
-
 -- Insert Locations (63 tỉnh thành Việt Nam)
 INSERT INTO public.locations (name) VALUES
   ('Hà Nội'),

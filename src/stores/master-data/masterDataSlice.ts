@@ -302,6 +302,7 @@ const masterDataSlice = createSlice({
       })
       .addCase(fetchAllMasterData.rejected, (state, action) => {
         state.loading = false
+        state.initialized = true
         state.error = action.payload as string
       })
       .addCase(fetchLocations.fulfilled, (state, action) => {

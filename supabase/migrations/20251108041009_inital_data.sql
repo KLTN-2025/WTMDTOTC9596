@@ -8,23 +8,21 @@ create table if not exists public.profiles (
   dob date,
   cid text,
   doi date,
-  join_date date,
   role text default 'buyer' check (role in ('buyer', 'seller', 'admin')),
+  status text default 'active' check (status in ('active', 'banned')),
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+
+create index if not exists profiles_role_idx on public.profiles (role);
+create index if not exists profiles_status_idx on public.profiles (status);
+create index if not exists profiles_email_idx on public.profiles (email);
+create index if not exists profiles_phone_idx on public.profiles (phone);
 
 create table if not exists public.brands (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   logo_url text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
-create table if not exists public.categories (
-  id uuid primary key default gen_random_uuid(),
-  name text not null unique,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
@@ -106,6 +104,12 @@ create table if not exists public.stores (
   unique (owner_id)
 );
 
+create index if not exists stores_status_idx on public.stores (status);
+create index if not exists stores_verified_idx on public.stores (verified);
+create index if not exists stores_store_type_idx on public.stores (store_type);
+create index if not exists stores_address_idx on public.stores (address);
+create index if not exists stores_created_at_idx on public.stores (created_at desc);
+
 create type public.product_condition as enum ('new', 'used');
 create type public.product_status as enum ('pending', 'rejected', 'available', 'sold');
 
@@ -113,7 +117,6 @@ create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   store_id uuid references public.stores(id) on delete cascade,
   brand_id uuid references public.brands(id) on delete set null,
-  category_id uuid references public.categories(id) on delete set null,
   location_id uuid references public.locations(id) on delete set null,
   fuel_id uuid references public.fuels(id) on delete set null,
   transmission_id uuid references public.transmissions(id) on delete set null,
@@ -128,7 +131,7 @@ create table if not exists public.products (
   mileage_km integer check (mileage_km >= 0),    -- số km đã đi (xe cũ)
   seats integer,                                 -- số chỗ ngồi
   origin text,                                   -- xuất xứ
-  condition_type public.product_condition not null default 'used',  -- tình trạng xe (new/used/demo/refurbished)
+  condition_type public.product_condition not null default 'new',  -- tình trạng xe (new/used)
   description text,                              -- mô tả chi tiết
   warranty_policy text,                          -- chính sách bảo hành
   status public.product_status not null default 'pending',               -- trạng thái: pending/available/sold
@@ -161,7 +164,6 @@ create index if not exists products_condition_type_idx on public.products (condi
 create index if not exists products_status_idx on public.products (status);
 create index if not exists products_specs_idx on public.products using gin (specs);
 create index if not exists products_brand_idx on public.products (brand_id);
-create index if not exists products_category_idx on public.products (category_id);
 create index if not exists products_location_fk_idx on public.products (location_id);
 create index if not exists products_fuel_fk_idx on public.products (fuel_id);
 create index if not exists products_transmission_fk_idx on public.products (transmission_id);
@@ -171,6 +173,11 @@ create index if not exists products_store_idx on public.products (store_id);
 create index if not exists products_seats_idx on public.products (seats);
 create index if not exists products_model_idx on public.products (model_id);
 create index if not exists products_version_idx on public.products (version_id);
+create index if not exists products_approved_by_idx on public.products (approved_by);
+create index if not exists products_rejected_by_idx on public.products (rejected_by);
+create index if not exists products_sold_at_idx on public.products (sold_at);
+create index if not exists products_mileage_km_idx on public.products (mileage_km);
+create index if not exists products_doors_idx on public.products (doors);
 
 create table if not exists public.product_favorites (
   id uuid primary key default gen_random_uuid(),
@@ -182,6 +189,7 @@ create table if not exists public.product_favorites (
 );
 create index if not exists product_favorites_user_id_idx on public.product_favorites (user_id);
 create index if not exists product_favorites_product_id_idx on public.product_favorites (product_id);
+create index if not exists product_favorites_created_at_idx on public.product_favorites (created_at desc);
 
 create table if not exists public.product_comments (
   id uuid primary key default gen_random_uuid(),
@@ -211,6 +219,7 @@ create table if not exists public.product_reactions (
 create index if not exists product_reactions_product_id_idx on public.product_reactions (product_id);
 create index if not exists product_reactions_user_id_idx on public.product_reactions (user_id);
 create index if not exists product_reactions_reaction_type_idx on public.product_reactions (reaction_type);
+create index if not exists product_reactions_created_at_idx on public.product_reactions (created_at desc);
 
 create table if not exists public.test_drive_bookings (
   id uuid primary key default gen_random_uuid(),
@@ -238,6 +247,7 @@ create index if not exists test_drive_bookings_location_idx on public.test_drive
 create index if not exists test_drive_bookings_status_idx on public.test_drive_bookings (status);
 create index if not exists test_drive_bookings_full_name_idx on public.test_drive_bookings (full_name);
 create index if not exists test_drive_bookings_phone_idx on public.test_drive_bookings (phone);
+create index if not exists test_drive_bookings_created_at_idx on public.test_drive_bookings (created_at desc);
 
 
 

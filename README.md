@@ -75,6 +75,44 @@ yarn dev
 pnpm dev
 ```
 
+### Supabase Cloud Deployment
+
+```bash
+npx supabase login
+```
+
+3. Link the remote project:
+
+```bash
+npx supabase link --project-ref <SUPABASE_PROJECT_REF>
+```
+
+4. Push database migrations to the linked cloud project:
+
+```bash
+npx supabase db push --yes
+```
+
+5. Load environment variables for Lambda Functions:
+
+```bash
+npx supabase secrets set --env-file ./supabase/.env.example
+```
+
+6. Deploy Lambda Functions (if any):
+
+```bash
+npx supabase functions deploy
+```
+
+### Seed Master Data
+
+Run the seed script after migrations to populate master data (brands, categories, etc.):
+
+```bash
+npm run seed
+```
+
 ## 📜 Available Scripts
 
 - `npm run dev` - Start development server
