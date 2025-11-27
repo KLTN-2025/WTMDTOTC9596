@@ -434,7 +434,6 @@ export function Users() {
                   }
                   placeholder='Chọn vai trò'
                   size='md'
-                  color='#04113E'
                 />
               </Box>
             </HStack>
@@ -443,18 +442,18 @@ export function Users() {
               <ScrollArea.Viewport>
                 <Table.Root>
                   <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Người dùng</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thông tin liên hệ</Table.ColumnHeader>
-                      <Table.ColumnHeader>Vai trò</Table.ColumnHeader>
-                      <Table.ColumnHeader>Trạng thái</Table.ColumnHeader>
-                      <Table.ColumnHeader>Ngày tạo</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thao tác</Table.ColumnHeader>
+                    <Table.Row bg='#FFF'>
+                      <Table.ColumnHeader color='#04113E'>Người dùng</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thông tin liên hệ</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Vai trò</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Trạng thái</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Ngày tạo</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thao tác</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
-                  <Table.Body>
+                  <Table.Body bg='#FFF'>
                     {users.length === 0 ? (
-                      <Table.Row>
+                      <Table.Row bg='#FFF'>
                         <Table.Cell colSpan={6}>
                           <Flex justify='center' align='center' py={8}>
                             <Text fontSize='14px' color='#6B7280'>
@@ -465,7 +464,7 @@ export function Users() {
                       </Table.Row>
                     ) : (
                       users.map(user => (
-                        <Table.Row key={user.id}>
+                        <Table.Row key={user.id} bg='#FFF'>
                           <Table.Cell>
                             <HStack gap={3}>
                               {user.avatarUrl ? (
@@ -579,15 +578,15 @@ export function Users() {
       <Dialog.Root open={isCreateDialogOpen} onOpenChange={e => setIsCreateDialogOpen(e.open)}>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content bgColor='#FFF'>
             <Dialog.Header>
-              <Dialog.Title>Tạo người dùng mới</Dialog.Title>
+              <Dialog.Title color='#04113E'>Tạo người dùng mới</Dialog.Title>
             </Dialog.Header>
             <form onSubmit={handleSubmit(handleCreateUser)}>
               <Dialog.Body>
                 <VStack align='stretch' gap={4}>
                   <Field.Root invalid={!!errors.fullName}>
-                    <Field.Label>Họ và tên</Field.Label>
+                    <Field.Label color='#04113E'>Họ và tên</Field.Label>
                     <Input
                       placeholder='Nhập họ và tên'
                       bg='white'
@@ -602,7 +601,7 @@ export function Users() {
                   </Field.Root>
 
                   <Field.Root invalid={!!errors.phone}>
-                    <Field.Label>Số điện thoại</Field.Label>
+                    <Field.Label color='#04113E'>Số điện thoại</Field.Label>
                     <Input
                       placeholder='Nhập số điện thoại'
                       bg='white'
@@ -615,7 +614,7 @@ export function Users() {
                   </Field.Root>
 
                   <Field.Root invalid={!!errors.email}>
-                    <Field.Label>Email (tùy chọn)</Field.Label>
+                    <Field.Label color='#04113E'>Email (tùy chọn)</Field.Label>
                     <Input
                       type='email'
                       placeholder='Nhập email'
@@ -630,6 +629,7 @@ export function Users() {
 
                   <SelectFieldController
                     label='Vai trò'
+                    color='#04113E'
                     control={control}
                     name='role'
                     collection={roleFormCollection}
@@ -639,7 +639,7 @@ export function Users() {
                   />
 
                   <Field.Root invalid={!!errors.password}>
-                    <Field.Label>Mật khẩu (mặc định: 123456)</Field.Label>
+                    <Field.Label color='#04113E'>Mật khẩu (mặc định: 123456)</Field.Label>
                     <Input
                       type='password'
                       placeholder='Nhập mật khẩu'
@@ -681,7 +681,7 @@ export function Users() {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>Cập nhật người dùng</Dialog.Title>
+              <Dialog.Title color='#04113E'>Cập nhật người dùng</Dialog.Title>
             </Dialog.Header>
             <form onSubmit={handleSubmitEdit(handleEditUser)}>
               <Dialog.Body>
@@ -724,7 +724,6 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
-                      color='#04113E'
                       {...registerEdit('email')}
                     />
                     {errorsEdit.email && (

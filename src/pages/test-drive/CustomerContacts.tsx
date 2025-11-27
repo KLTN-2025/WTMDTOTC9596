@@ -105,8 +105,8 @@ export function CustomerContacts() {
 
   if (isLoading && contacts.length === 0) {
     return (
-      <Container maxW='1200px' py={8}>
-        <Card.Root bg='white' borderRadius='16px' p={8}>
+      <Container maxW='1200px' py={8} bg='#FFF'>
+        <Card.Root bg='white' borderRadius='16px' p={8} >
           <Flex justify='center' align='center' minH='400px'>
             <Spinner size='lg' color='#204ED3' />
           </Flex>
@@ -173,7 +173,7 @@ export function CustomerContacts() {
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 <Table.Root>
-                  <Table.Header >
+                  <Table.Header>
                     <Table.Row bg='#FFF'>
                       <Table.ColumnHeader color='#04113E'>Khách hàng</Table.ColumnHeader>
                       <Table.ColumnHeader color='#04113E'>Thông tin liên hệ</Table.ColumnHeader>
@@ -181,7 +181,7 @@ export function CustomerContacts() {
                       <Table.ColumnHeader color='#04113E'>Địa điểm</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
-                  <Table.Body bg='#F8FAFC'>
+                  <Table.Body bg='#FFF'>
                     {contacts.length === 0 ? (
                       <Table.Row bg='#FFF'>
                         <Table.Cell colSpan={4}>
@@ -194,7 +194,7 @@ export function CustomerContacts() {
                       </Table.Row>
                     ) : (
                       contacts.map(contact => (
-                        <Table.Row key={contact.id}>
+                        <Table.Row key={contact.id} bg='#FFF'>
                           <Table.Cell>
                             <HStack gap={3}>
                               {contact.profile?.avatarUrl ? (
@@ -216,7 +216,7 @@ export function CustomerContacts() {
                                   alignItems='center'
                                   justifyContent='center'
                                 >
-                                  <Text fontSize='14px' fontWeight='600' color='#737373'>
+                                  <Text fontSize='14px' fontWeight='600' color='#04113E'>
                                     {(contact.profile?.fullName || contact.fullName)
                                       .charAt(0)
                                       .toUpperCase()}
@@ -228,7 +228,7 @@ export function CustomerContacts() {
                                   {contact.profile?.fullName || contact.fullName}
                                 </Text>
                                 {contact.profile?.email && (
-                                  <Text fontSize='12px' color='#6B7280'>
+                                  <Text fontSize='12px' color='#04113E'>
                                     {contact.profile.email}
                                   </Text>
                                 )}
@@ -241,19 +241,19 @@ export function CustomerContacts() {
                                 {contact.profile?.phone || contact.phone}
                               </Text>
                               {contact.profile?.address && (
-                                <Text fontSize='12px' color='#6B7280' lineClamp={1}>
+                                <Text fontSize='12px' color='#04113E' lineClamp={1}>
                                   {contact.profile.address}
                                 </Text>
                               )}
                             </VStack>
                           </Table.Cell>
                           <Table.Cell>
-                            <Text fontSize='14px' color='#04113E'>
+                            <Text color='#04113E' fontSize='14px'>
                               {formatDate(contact.scheduledAt, 'dd/MM/yyyy HH:mm')}
                             </Text>
                           </Table.Cell>
                           <Table.Cell>
-                            <Text fontSize='14px' color='#04113E' lineClamp={2}>
+                            <Text color='#04113E' fontSize='14px' lineClamp={2}>
                               {contact.location}
                             </Text>
                           </Table.Cell>

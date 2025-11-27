@@ -488,6 +488,7 @@ export function Categories() {
                   borderRadius='8px'
                   fontWeight='600'
                   fontSize='14px'
+                  color='#04113E'
                 >
                   {tab.label}
                 </Tabs.Trigger>

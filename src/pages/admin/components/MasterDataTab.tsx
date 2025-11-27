@@ -56,16 +56,16 @@ export const MasterDataTab = memo(
           <ScrollArea.Viewport>
             <Table.Root>
               <Table.Header>
-                <Table.Row>
-                  {showLogo && <Table.ColumnHeader>Logo</Table.ColumnHeader>}
-                  <Table.ColumnHeader>Tên</Table.ColumnHeader>
-                  <Table.ColumnHeader>Ngày tạo</Table.ColumnHeader>
-                  <Table.ColumnHeader>Thao tác</Table.ColumnHeader>
+                <Table.Row bg='#FFF'>
+                  {showLogo && <Table.ColumnHeader color='#04113E'>Logo</Table.ColumnHeader>}
+                  <Table.ColumnHeader color='#04113E'>Tên</Table.ColumnHeader>
+                  <Table.ColumnHeader color='#04113E'>Ngày tạo</Table.ColumnHeader>
+                  <Table.ColumnHeader color='#04113E'>Thao tác</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {data.length === 0 ? (
-                  <Table.Row>
+                  <Table.Row bg='#FFF'>
                     <Table.Cell colSpan={showLogo ? 4 : 3}>
                       <Flex justify='center' align='center' py={8}>
                         <Text fontSize='14px' color='#6B7280'>
@@ -76,7 +76,7 @@ export const MasterDataTab = memo(
                   </Table.Row>
                 ) : (
                   data.map(item => (
-                    <Table.Row key={item.id}>
+                    <Table.Row key={item.id} bg='#FFF'>
                       {showLogo && (
                         <Table.Cell>
                           {item.logoUrl ? (

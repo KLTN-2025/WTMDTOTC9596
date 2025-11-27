@@ -62,9 +62,9 @@ export const MasterDataDialog = memo(
       <Dialog.Root open={isOpen} onOpenChange={e => (!e.open ? handleClose() : undefined)}>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content bgColor='#FFF'>
             <Dialog.Header>
-              <Dialog.Title>
+              <Dialog.Title color='#04113E'>
                 {selectedItem ? 'Chỉnh sửa' : 'Thêm mới'} {label.toLowerCase()}
               </Dialog.Title>
             </Dialog.Header>
@@ -77,7 +77,7 @@ export const MasterDataDialog = memo(
               <Dialog.Body>
                 <VStack align='stretch' gap={4}>
                   <Field.Root invalid={!!errors.name}>
-                    <Field.Label>Tên</Field.Label>
+                    <Field.Label color='#04113E'>Tên</Field.Label>
                     <Input
                       placeholder='Nhập tên'
                       bg='white'
@@ -90,7 +90,7 @@ export const MasterDataDialog = memo(
                   </Field.Root>
                   {showLogo && (
                     <Field.Root invalid={!!errors.logoUrl}>
-                      <Field.Label>Logo URL (tùy chọn)</Field.Label>
+                      <Field.Label color='#04113E'>Logo URL (tùy chọn)</Field.Label>
                       <Input
                         type='url'
                         placeholder='Nhập URL logo'
@@ -109,7 +109,7 @@ export const MasterDataDialog = memo(
               </Dialog.Body>
               <Dialog.Footer>
                 <HStack gap={2}>
-                  <Button variant='outline' onClick={handleClose}>
+                  <Button variant='outline' onClick={handleClose} color='#04113E'>
                     Hủy
                   </Button>
                   <Button type='submit' bg='#204ED3' color='white' loading={isSubmitting}>

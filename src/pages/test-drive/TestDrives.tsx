@@ -286,29 +286,29 @@ export function TestDrives() {
                     <ScrollArea.Content>
                       <Table.Root>
                         <Table.Header>
-                          <Table.Row>
-                            <Table.ColumnHeader minW='150px'>Khách hàng</Table.ColumnHeader>
-                            <Table.ColumnHeader minW='120px'>Dòng xe</Table.ColumnHeader>
-                            <Table.ColumnHeader minW='140px'>Thời gian</Table.ColumnHeader>
-                            <Table.ColumnHeader minW='150px'>Địa điểm</Table.ColumnHeader>
-                            <Table.ColumnHeader minW='100px'>Bài đăng</Table.ColumnHeader>
-                            <Table.ColumnHeader minW='120px'>Trạng thái</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign='right' minW='180px'>
+                          <Table.Row bg='#FFF'>
+                            <Table.ColumnHeader color='#04113E' minW='150px'>Khách hàng</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' minW='120px'>Dòng xe</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' minW='140px'>Thời gian</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' minW='150px'>Địa điểm</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' minW='100px'>Bài đăng</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' minW='120px'>Trạng thái</Table.ColumnHeader>
+                            <Table.ColumnHeader color='#04113E' textAlign='right' minW='180px'>
                               Thao tác
                             </Table.ColumnHeader>
                           </Table.Row>
                         </Table.Header>
-                        <Table.Body>
+                        <Table.Body >
                           {bookings.map(booking => {
                             const dateTime = formatDateTime(booking.scheduledAt)
                             return (
-                              <Table.Row key={booking.id} _hover={{ bg: 'gray.50' }}>
+                              <Table.Row key={booking.id} _hover={{ bg: 'gray.50' }} bg='#FFF'>
                                 <Table.Cell>
                                   <VStack align='flex-start' gap={1}>
-                                    <Text fontWeight='600' lineClamp={1} title={booking.fullName}>
+                                    <Text color='#04113E' fontWeight='600' lineClamp={1} title={booking.fullName}>
                                       {booking.fullName}
                                     </Text>
-                                    <Text color='gray.500' fontSize='sm' lineClamp={1}>
+                                    <Text color='#04113E' fontSize='sm' lineClamp={1}>
                                       {booking.phone}
                                     </Text>
                                   </VStack>
@@ -316,6 +316,7 @@ export function TestDrives() {
                                 <Table.Cell>
                                   <Text
                                     fontSize='sm'
+                                    color='#04113E'
                                     lineClamp={1}
                                     title={booking.product?.model || 'N/A'}
                                   >
@@ -324,8 +325,8 @@ export function TestDrives() {
                                 </Table.Cell>
                                 <Table.Cell>
                                   <VStack align='flex-start' gap={1}>
-                                    <Text lineClamp={1}>{dateTime.date}</Text>
-                                    <Text color='gray.500' fontSize='sm' lineClamp={1}>
+                                    <Text color='#04113E' lineClamp={1}>{dateTime.date}</Text>
+                                    <Text color='#04113E' fontSize='sm' lineClamp={1}>
                                       {dateTime.time}
                                     </Text>
                                   </VStack>
@@ -333,10 +334,11 @@ export function TestDrives() {
                                 <Table.Cell>
                                   <Text
                                     fontSize='sm'
+                                    color='#04113E'
                                     lineClamp={2}
                                     title={booking.location || 'N/A'}
                                   >
-                                    {booking.location || 'N/A'}
+                                    {booking.location || 'N/A' || 'N/A'}
                                   </Text>
                                 </Table.Cell>
                                 <Table.Cell>
@@ -347,6 +349,8 @@ export function TestDrives() {
                                     onClick={() =>
                                       window.open(`/products/${booking.productId}`, '_blank')
                                     }
+                                    color='#04113E'
+                                    _hover={{ bg: '#204ED3', color: 'white' }}
                                   >
                                     <Icon>
                                       <FiExternalLink />

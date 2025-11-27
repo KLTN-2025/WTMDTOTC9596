@@ -260,7 +260,7 @@ export function CarListings() {
           </Text>
         </VStack>
 
-        <Card.Root bg='white' borderRadius='16px' p={6}>
+        <Card.Root bgColor='#FFF' borderRadius='16px' p={6}>
           <VStack align='stretch' gap={4}>
             <HStack gap={3}>
               <Box position='relative' flex={1}>
@@ -312,18 +312,18 @@ export function CarListings() {
               <ScrollArea.Viewport>
                 <Table.Root>
                   <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Sản phẩm</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thông tin</Table.ColumnHeader>
-                      <Table.ColumnHeader>Giá</Table.ColumnHeader>
-                      <Table.ColumnHeader>Trạng thái</Table.ColumnHeader>
-                      <Table.ColumnHeader>Ngày tạo</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thao tác</Table.ColumnHeader>
+                    <Table.Row bg='#FFF'>
+                      <Table.ColumnHeader color='#04113E'>Sản phẩm</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thông tin</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Giá</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Trạng thái</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Ngày tạo</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thao tác</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
-                  <Table.Body>
+                  <Table.Body bg='#FFF'>
                     {products.length === 0 ? (
-                      <Table.Row>
+                      <Table.Row bg='#FFF'>
                         <Table.Cell colSpan={6}>
                           <Flex justify='center' align='center' py={8}>
                             <Text fontSize='14px' color='#6B7280'>
@@ -334,7 +334,7 @@ export function CarListings() {
                       </Table.Row>
                     ) : (
                       products.map(product => (
-                        <Table.Row key={product.id}>
+                        <Table.Row key={product.id} bg='#FFF'>
                           <Table.Cell>
                             <HStack gap={3}>
                               {product.mediaUrls && product.mediaUrls.length > 0 ? (

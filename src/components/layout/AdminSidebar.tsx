@@ -43,7 +43,7 @@ export function AdminSidebar() {
       borderColor='gray.200'
       minH='calc(100vh - 80px)'
     >
-      <Card.Root h='100%' p={0}>
+      <Card.Root h='100%' p={0} bgColor='#FFF'>
         <Card.Body p={0}>
           <VStack align='stretch' gap={0} py={4}>
             {menuItems.map((item, index) => {
