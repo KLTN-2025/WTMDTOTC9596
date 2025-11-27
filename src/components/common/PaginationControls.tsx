@@ -37,6 +37,8 @@ export function PaginationControls({
               <IconButton
                 variant={currentPage === page.value ? 'outline' : 'ghost'}
                 onClick={() => onPageChange(page.value)}
+                _hover={{ bg: '#E5E5E5' }}
+                color='#04113E'
               >
                 {page.value}
               </IconButton>

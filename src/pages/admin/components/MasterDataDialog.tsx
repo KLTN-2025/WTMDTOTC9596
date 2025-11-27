@@ -83,6 +83,7 @@ export const MasterDataDialog = memo(
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('name')}
                     />
                     {errors.name && <Field.ErrorText>{errors.name.message}</Field.ErrorText>}
@@ -96,6 +97,7 @@ export const MasterDataDialog = memo(
                         bg='white'
                         borderColor='#E5E5E5'
                         borderRadius='8px'
+                        color='#04113E'
                         {...register('logoUrl')}
                       />
                       {errors.logoUrl && (

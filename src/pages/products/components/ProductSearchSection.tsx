@@ -196,6 +196,7 @@ export const ProductSearchSection = memo<ProductSearchSectionProps>(
                 >
                   <Input
                     placeholder='Tìm xe cộ...'
+                    color='#04113E'
                     border='none'
                     fontSize='16px'
                     pl={0}
@@ -216,6 +217,7 @@ export const ProductSearchSection = memo<ProductSearchSectionProps>(
                       gap={2}
                       fontWeight='700'
                       fontSize='14px'
+                      _hover={{ bg: '#E5E5E5' }}
                     >
                       <Icon size='md'>
                         <HiOutlineMapPin />
@@ -260,6 +262,7 @@ export const ProductSearchSection = memo<ProductSearchSectionProps>(
                       gap={2}
                       fontWeight='700'
                       fontSize='14px'
+                      _hover={{ bg: '#E5E5E5' }}
                     >
                       <Icon size='md'>
                         <FaCar />
@@ -522,6 +525,7 @@ export const ProductSearchSection = memo<ProductSearchSectionProps>(
               fontWeight='700'
               fontSize='14px'
               onClick={handleClearFilters}
+              _hover={{ bg: '#E5E5E5' }}
             >
               <Icon size='md'>
                 <HiOutlineTrash />

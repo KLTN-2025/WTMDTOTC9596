@@ -71,17 +71,19 @@ export const ModelDialog = memo(
               <Dialog.Body>
                 <VStack align='stretch' gap={4}>
                   <Field.Root invalid={!!errors.name}>
-                    <Field.Label>Tên dòng xe</Field.Label>
+                    <Field.Label color='#04113E'>Tên dòng xe</Field.Label>
                     <Input
                       placeholder='Nhập tên dòng xe'
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('name')}
                     />
                     {errors.name && <Field.ErrorText>{errors.name.message}</Field.ErrorText>}
                   </Field.Root>
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Hãng xe'
                     control={control}
                     name='brandId'

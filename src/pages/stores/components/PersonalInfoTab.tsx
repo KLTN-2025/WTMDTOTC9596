@@ -142,7 +142,7 @@ export function PersonalInfoTab() {
 
   if (authLoading) {
     return (
-      <Card.Root bg='white' borderRadius='16px' p={{ base: 5, md: 8 }} className='rounded-2xl'>
+      <Card.Root bg='white' borderRadius='16px' p={{ base: 5, md: 8 }} className='rounded-2xl !bg-white'>
         <Flex align='center' justify='center' minH='200px'>
           <Text fontSize='14px' color='#6B7280'>
             Đang tải thông tin...
@@ -161,7 +161,7 @@ export function PersonalInfoTab() {
           alignItems='flex-start'
         >
           <Field.Root invalid={!!errors.avatarUrl} w='100%'>
-            <Field.Label>Ảnh đại diện</Field.Label>
+            <Field.Label color='#04113E'>Ảnh đại diện</Field.Label>
             <VStack
               align='center'
               gap={4}
@@ -239,7 +239,7 @@ export function PersonalInfoTab() {
 
             <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
               <Field.Root invalid={!!errors.fullName}>
-                <Field.Label>Họ và tên</Field.Label>
+                <Field.Label color='#04113E'>Họ và tên</Field.Label>
                 <Input
                   placeholder='Nhập họ và tên'
                   bg='white'
@@ -248,14 +248,14 @@ export function PersonalInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   {...register('fullName')}
                 />
                 {errors.fullName && <Field.ErrorText>{errors.fullName.message}</Field.ErrorText>}
               </Field.Root>
 
               <Field.Root>
-                <Field.Label>Số điện thoại</Field.Label>
+                <Field.Label color='#04113E'>Số điện thoại</Field.Label>
                 <Input
                   placeholder='Chưa cập nhật'
                   bg='white'
@@ -264,7 +264,7 @@ export function PersonalInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   disabled
                   {...register('phone')}
                 />
@@ -272,7 +272,7 @@ export function PersonalInfoTab() {
               </Field.Root>
 
               <Field.Root invalid={!!errors.address}>
-                <Field.Label>Địa chỉ</Field.Label>
+                <Field.Label color='#04113E'>Địa chỉ</Field.Label>
                 <Input
                   placeholder='Nhập địa chỉ'
                   bg='white'
@@ -281,7 +281,7 @@ export function PersonalInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   {...register('address')}
                 />
                 {errors.address && <Field.ErrorText>{errors.address.message}</Field.ErrorText>}
@@ -305,7 +305,7 @@ export function PersonalInfoTab() {
 
             <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
               <Field.Root invalid={!!errors.email}>
-                <Field.Label>Email</Field.Label>
+                <Field.Label color='#04113E'>Email</Field.Label>
                 <Input
                   placeholder='Nhập email'
                   bg='white'
@@ -314,14 +314,14 @@ export function PersonalInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   {...register('email')}
                 />
                 {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
               </Field.Root>
 
               <Field.Root invalid={!!errors.dob} w='100%'>
-                <Field.Label>Ngày sinh</Field.Label>
+                <Field.Label color='#04113E'>Ngày sinh</Field.Label>
                 <Controller
                   control={control}
                   name='dob'
@@ -351,7 +351,7 @@ export function PersonalInfoTab() {
               </Field.Root>
 
               <Field.Root invalid={!!errors.cid}>
-                <Field.Label>CCCD / Hộ chiếu</Field.Label>
+                <Field.Label color='#04113E'>CCCD / Hộ chiếu</Field.Label>
                 <Input
                   placeholder='Nhập số CCCD / Hộ chiếu'
                   bg='white'
@@ -360,14 +360,14 @@ export function PersonalInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   {...register('cid')}
                 />
                 {errors.cid && <Field.ErrorText>{errors.cid.message}</Field.ErrorText>}
               </Field.Root>
 
               <Field.Root invalid={!!errors.doi}>
-                <Field.Label>Ngày cấp</Field.Label>
+                <Field.Label color='#04113E'>Ngày cấp</Field.Label>
                 <Controller
                   control={control}
                   name='doi'

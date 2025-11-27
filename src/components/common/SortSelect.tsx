@@ -38,6 +38,7 @@ export const SortSelect = ({
   return (
     <Select.Root
       collection={collection}
+      color='#04113E'
       size={size}
       value={value ? [value] : []}
       onValueChange={({ value: selected }) => onChange(selected[0] ?? value)}

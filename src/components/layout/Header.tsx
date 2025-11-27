@@ -3,7 +3,7 @@ import { Link as RouterLink, useNavigate } from 'react-router'
 import { FaUser } from 'react-icons/fa'
 import { HiBars3, HiOutlineHeart, HiOutlineClipboardDocumentList } from 'react-icons/hi2'
 import { IoCarSportOutline, IoStorefrontOutline } from 'react-icons/io5'
-import { FiLogOut, FiShield, FiCalendar, FiUsers } from 'react-icons/fi'
+import { FiLogOut, FiShield, FiCalendar, FiUsers, FiUser } from 'react-icons/fi'
 import { logout } from '@/api/auth'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/hooks/useAuth'
@@ -16,6 +16,10 @@ export function Header() {
   const navigate = useNavigate()
   const toast = useToast()
   const { isAuthenticated } = useAuth()
+
+  const handleStores = () => {
+    navigate(PATHS.STORES)
+  }
 
   const handleLogout = async () => {
     try {
@@ -163,6 +167,12 @@ export function Header() {
                             Admin
                           </Menu.Item>
                         </ProtectedComponent>
+                        <Menu.Item value='stores' onClick={handleStores}>
+                          <Icon>
+                            <FiUser />
+                          </Icon>
+                          Hồ sơ
+                        </Menu.Item>
                         <Menu.Item value='logout' onClick={handleLogout}>
                           <Icon>
                             <FiLogOut />

@@ -271,7 +271,7 @@ export function StoreInfoTab() {
 
           <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
             <Field.Root invalid={!!errors.avatarUrl}>
-              <Field.Label>Ảnh đại diện</Field.Label>
+              <Field.Label color='#04113E'>Ảnh đại diện</Field.Label>
               <VStack align='stretch' gap={3}>
                 <Box
                   borderRadius='12px'
@@ -323,7 +323,7 @@ export function StoreInfoTab() {
             </Field.Root>
 
             <Field.Root invalid={!!errors.bannerUrl}>
-              <Field.Label>Banner</Field.Label>
+              <Field.Label color='#04113E'>Banner</Field.Label>
               <VStack align='stretch' gap={3} w='100%'>
                 <Box
                   borderRadius='12px'
@@ -378,7 +378,7 @@ export function StoreInfoTab() {
 
           <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
             <Field.Root invalid={!!errors.storeUrl}>
-              <Field.Label>Link cửa hàng</Field.Label>
+              <Field.Label color='#04113E'>Link cửa hàng</Field.Label>
               <Input
                 placeholder='Nhập link cửa hàng'
                 bg='white'
@@ -387,14 +387,14 @@ export function StoreInfoTab() {
                 px={4}
                 py={3}
                 fontSize='16px'
-                color='#737373'
+                color='#04113E'
                 {...register('storeUrl')}
               />
               {errors.storeUrl && <Field.ErrorText>{errors.storeUrl.message}</Field.ErrorText>}
             </Field.Root>
 
             <Field.Root invalid={!!errors.storeName}>
-              <Field.Label>Tên cửa hàng</Field.Label>
+              <Field.Label color='#04113E'>Tên cửa hàng</Field.Label>
               <Input
                 placeholder='Nhập tên cửa hàng'
                 bg='white'
@@ -403,7 +403,7 @@ export function StoreInfoTab() {
                 px={4}
                 py={3}
                 fontSize='16px'
-                color='#737373'
+                color='#04113E'
                 {...register('storeName')}
               />
               {errors.storeName && <Field.ErrorText>{errors.storeName.message}</Field.ErrorText>}
@@ -418,7 +418,7 @@ export function StoreInfoTab() {
             />
 
             <Field.Root invalid={!!errors.zalo}>
-              <Field.Label>Zalo</Field.Label>
+              <Field.Label color='#04113E'>Zalo</Field.Label>
               <Input
                 placeholder='Nhập link hoặc số Zalo'
                 bg='white'
@@ -427,14 +427,14 @@ export function StoreInfoTab() {
                 px={4}
                 py={3}
                 fontSize='16px'
-                color='#737373'
+                color='#04113E'
                 {...register('zalo')}
               />
               {errors.zalo && <Field.ErrorText>{errors.zalo.message}</Field.ErrorText>}
             </Field.Root>
 
             <Field.Root invalid={!!errors.phone}>
-              <Field.Label>Số điện thoại</Field.Label>
+              <Field.Label color='#04113E'>Số điện thoại</Field.Label>
               <Input
                 placeholder='Nhập số điện thoại'
                 bg='white'
@@ -443,14 +443,14 @@ export function StoreInfoTab() {
                 px={4}
                 py={3}
                 fontSize='16px'
-                color='#737373'
+                color='#04113E'
                 {...register('phone')}
               />
               {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
             </Field.Root>
 
             <Field.Root invalid={!!errors.externalLink}>
-              <Field.Label>Liên kết ngoài</Field.Label>
+              <Field.Label color='#04113E'>Liên kết ngoài</Field.Label>
               <Input
                 placeholder='Nhập liên kết ngoài'
                 bg='white'
@@ -459,7 +459,7 @@ export function StoreInfoTab() {
                 px={4}
                 py={3}
                 fontSize='16px'
-                color='#737373'
+                color='#04113E'
                 {...register('externalLink')}
               />
               {errors.externalLink && (
@@ -473,7 +473,7 @@ export function StoreInfoTab() {
             control={control}
             render={({ field }) => (
               <Field.Root invalid={!!errors.description}>
-                <Field.Label>Mô tả cửa hàng</Field.Label>
+                <Field.Label color='#04113E'>Mô tả cửa hàng</Field.Label>
                 <Textarea
                   placeholder='Nhập mô tả cửa hàng'
                   bg='white'
@@ -482,7 +482,7 @@ export function StoreInfoTab() {
                   px={4}
                   py={3}
                   fontSize='16px'
-                  color='#737373'
+                  color='#04113E'
                   minH='140px'
                   {...field}
                 />

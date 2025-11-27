@@ -105,6 +105,7 @@ function SearchSection({
                   placeholder='Tìm xe cộ...'
                   border='none'
                   variant='flushed'
+                  color='#04113E'
                   fontSize='16px'
                   pl={0}
                   _focus={{ boxShadow: 'none' }}
@@ -124,6 +125,7 @@ function SearchSection({
                     gap={2}
                     fontWeight='700'
                     fontSize='14px'
+                    _hover={{ bg: '#E5E5E5' }}
                   >
                     <Icon size='md'>
                       <HiOutlineMapPin />
@@ -166,6 +168,7 @@ function SearchSection({
                     gap={2}
                     fontWeight='700'
                     fontSize='14px'
+                    _hover={{ bg: '#E5E5E5' }}
                   >
                     <Icon size='md'>
                       <FaCar />
@@ -354,7 +357,6 @@ export function Home() {
         height='490.79px'
         mx='auto'
         maxW='1200px'
-        mt={6}
       >
         {/* Background Pattern */}
         <Box
@@ -792,6 +794,7 @@ export function Home() {
               fontWeight='700'
               fontSize='14px'
               onClick={handleViewAllProducts}
+              _hover={{ bg: '#E5E5E5' }}
             >
               Xem tất cả {totalProducts > 0 ? totalProducts : ''} tin đăng
             </Button>

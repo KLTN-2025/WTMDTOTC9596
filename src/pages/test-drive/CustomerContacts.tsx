@@ -116,7 +116,7 @@ export function CustomerContacts() {
   }
 
   return (
-    <Container maxW='1200px' py={8}>
+    <Container maxW='1200px' py={8} bg='#FFF'>
       <VStack align='stretch' gap={6}>
         <VStack align='stretch' gap={2}>
           <Heading fontSize='24px' fontWeight='700' color='#04113E'>
@@ -173,17 +173,17 @@ export function CustomerContacts() {
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 <Table.Root>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Khách hàng</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thông tin liên hệ</Table.ColumnHeader>
-                      <Table.ColumnHeader>Thời gian hẹn</Table.ColumnHeader>
-                      <Table.ColumnHeader>Địa điểm</Table.ColumnHeader>
+                  <Table.Header >
+                    <Table.Row bg='#FFF'>
+                      <Table.ColumnHeader color='#04113E'>Khách hàng</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thông tin liên hệ</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Thời gian hẹn</Table.ColumnHeader>
+                      <Table.ColumnHeader color='#04113E'>Địa điểm</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
-                  <Table.Body>
+                  <Table.Body bg='#F8FAFC'>
                     {contacts.length === 0 ? (
-                      <Table.Row>
+                      <Table.Row bg='#FFF'>
                         <Table.Cell colSpan={4}>
                           <Flex justify='center' align='center' py={8}>
                             <Text fontSize='14px' color='#6B7280'>

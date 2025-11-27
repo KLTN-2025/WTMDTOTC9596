@@ -200,6 +200,7 @@ export function ProductCard({
                   py={1.5}
                   fontSize='12px'
                   flex={1}
+                  _hover={{ bg: '#E5E5E5' }}
                 >
                   📞 0933.******
                 </Button>
@@ -212,6 +213,7 @@ export function ProductCard({
                   py={1.5}
                   fontSize='12px'
                   flex={1}
+                  _hover={{ bg: '#E5E5E5' }}
                 >
                   💬 Chat
                 </Button>

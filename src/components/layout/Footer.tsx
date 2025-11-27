@@ -97,7 +97,7 @@ export function Footer() {
               <Input
                 placeholder='Nhập email của bạn'
                 bg='white'
-                color='#A1A1A1'
+                color='#04113E'
                 borderColor='white'
                 borderRadius='6px 0 0 6px'
                 _focus={{ borderColor: 'white' }}

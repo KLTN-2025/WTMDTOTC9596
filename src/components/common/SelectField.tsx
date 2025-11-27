@@ -48,7 +48,7 @@ export function SelectField({
     <Select.Positioner zIndex='dropdown' {...positionerProps}>
       <Select.Content bg='white' boxShadow='lg' borderRadius='8px' {...contentProps}>
         {options.map((item: any) => (
-          <Select.Item item={item} key={item.value}>
+          <Select.Item item={item} key={item.value} color='#04113E'>
             {item.label}
             <Select.ItemIndicator />
           </Select.Item>
@@ -58,8 +58,8 @@ export function SelectField({
   )
 
   return (
-    <Field.Root invalid={invalid}>
-      {label && <Field.Label>{label}</Field.Label>}
+    <Field.Root invalid={invalid} >
+      {label && <Field.Label color='#04113E'>{label}</Field.Label>}
       <Select.Root
         collection={collection}
         value={value ? [value] : []}
@@ -71,7 +71,7 @@ export function SelectField({
         <Select.HiddenSelect />
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText placeholder={placeholder} />
+            <Select.ValueText color='#04113E' placeholder={placeholder} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />
@@ -102,6 +102,7 @@ export function SelectFieldController<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => (
         <SelectField
+          
           {...(label && { label })}
           collection={collection}
           {...(field.value && { value: field.value })}

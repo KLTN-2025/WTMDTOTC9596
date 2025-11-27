@@ -407,6 +407,7 @@ export function Users() {
                 </Icon>
                 <Input
                   placeholder='Tìm kiếm theo tên, số điện thoại, email...'
+                  color='#04113E'
                   pl={9}
                   pr={4}
                   py={2}
@@ -433,6 +434,7 @@ export function Users() {
                   }
                   placeholder='Chọn vai trò'
                   size='md'
+                  color='#04113E'
                 />
               </Box>
             </HStack>
@@ -591,6 +593,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('fullName')}
                     />
                     {errors.fullName && (
@@ -605,6 +608,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('phone')}
                     />
                     {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
@@ -618,6 +622,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('email')}
                     />
                     {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
@@ -641,6 +646,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...register('password')}
                     />
                     {errors.password && (
@@ -687,6 +693,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...registerEdit('fullName')}
                     />
                     {errorsEdit.fullName && (
@@ -701,6 +708,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...registerEdit('phone')}
                     />
                     {errorsEdit.phone && (
@@ -716,6 +724,7 @@ export function Users() {
                       bg='white'
                       borderColor='#E5E5E5'
                       borderRadius='8px'
+                      color='#04113E'
                       {...registerEdit('email')}
                     />
                     {errorsEdit.email && (

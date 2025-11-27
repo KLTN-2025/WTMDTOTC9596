@@ -277,6 +277,7 @@ export function CarListings() {
                 </Icon>
                 <Input
                   placeholder='Tìm kiếm theo tiêu đề...'
+                  color='#04113E'
                   pl={9}
                   pr={4}
                   py={2}

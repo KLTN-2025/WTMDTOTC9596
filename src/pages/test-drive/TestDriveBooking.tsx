@@ -248,12 +248,13 @@ export function TestDriveBooking() {
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
                     <Field.Root invalid={!!errors.fullName}>
-                      <Field.Label>Họ và tên *</Field.Label>
+                      <Field.Label color='#04113E'>Họ và tên *</Field.Label>
                       <Input
                         placeholder='Nhập họ và tên'
                         {...register('fullName')}
                         borderColor={errors.fullName ? 'red.500' : '#E5E5E5'}
                         borderRadius='8px'
+                        color='#04113E'
                       />
                       {errors.fullName && (
                         <Field.ErrorText>{errors.fullName.message}</Field.ErrorText>
@@ -261,12 +262,13 @@ export function TestDriveBooking() {
                     </Field.Root>
 
                     <Field.Root invalid={!!errors.phone}>
-                      <Field.Label>Số điện thoại *</Field.Label>
+                      <Field.Label color='#04113E'>Số điện thoại *</Field.Label>
                       <Input
                         placeholder='Nhập số điện thoại'
                         {...register('phone')}
                         borderColor={errors.phone ? 'red.500' : '#E5E5E5'}
                         borderRadius='8px'
+                        color='#04113E'
                       />
                       {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
                     </Field.Root>
@@ -280,7 +282,7 @@ export function TestDriveBooking() {
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
                     <Field.Root invalid={!!errors.date}>
-                      <Field.Label>Ngày *</Field.Label>
+                      <Field.Label color='#04113E'>Ngày *</Field.Label>
                       <Controller
                         control={control}
                         name='date'
@@ -298,12 +300,13 @@ export function TestDriveBooking() {
                     </Field.Root>
 
                     <Field.Root invalid={!!errors.time}>
-                      <Field.Label>Giờ *</Field.Label>
+                      <Field.Label color='#04113E'>Giờ *</Field.Label>
                       <Input
                         type='time'
                         {...register('time')}
                         borderColor={errors.time ? 'red.500' : '#E5E5E5'}
                         borderRadius='8px'
+                        color='#04113E'
                       />
                       {errors.time && <Field.ErrorText>{errors.time.message}</Field.ErrorText>}
                     </Field.Root>
@@ -311,24 +314,26 @@ export function TestDriveBooking() {
                 </VStack>
 
                 <Field.Root invalid={!!errors.location}>
-                  <Field.Label>Địa điểm *</Field.Label>
+                  <Field.Label color='#04113E'>Địa điểm *</Field.Label>
                   <Input
                     placeholder='Ví dụ: Đại lý Hà Nội, 123 Đường ABC...'
                     {...register('location')}
                     borderColor={errors.location ? 'red.500' : '#E5E5E5'}
                     borderRadius='8px'
+                    color='#04113E'
                   />
                   {errors.location && <Field.ErrorText>{errors.location.message}</Field.ErrorText>}
                 </Field.Root>
 
                 <Field.Root invalid={!!errors.note}>
-                  <Field.Label>Ghi chú (tùy chọn)</Field.Label>
+                  <Field.Label color='#04113E'>Ghi chú (tùy chọn)</Field.Label>
                   <Textarea
                     placeholder='Nhập ghi chú nếu có...'
                     rows={4}
                     {...register('note')}
                     borderColor={errors.note ? 'red.500' : '#E5E5E5'}
                     borderRadius='8px'
+                    color='#04113E'
                   />
                   {errors.note && <Field.ErrorText>{errors.note.message}</Field.ErrorText>}
                 </Field.Root>
@@ -339,7 +344,8 @@ export function TestDriveBooking() {
                     borderColor='#E5E5E5'
                     onClick={() => navigate(-1)}
                     disabled={isSubmitting}
-                  >
+                    _hover={{ bg: '#E5E5E5' }}
+                    >
                     Hủy
                   </Button>
                   <Button

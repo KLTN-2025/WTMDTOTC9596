@@ -513,7 +513,7 @@ export function Sell() {
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
                   <Field.Root invalid={!!errors.title}>
-                    <Field.Label>Tiêu đề tin đăng</Field.Label>
+                    <Field.Label color='#04113E'>Tiêu đề tin đăng</Field.Label>
                     <Input
                       placeholder='Nhập tiêu đề hấp dẫn... (tối đa 100 ký tự)'
                       bg='white'
@@ -522,7 +522,7 @@ export function Sell() {
                       px={4}
                       py={3}
                       fontSize='16px'
-                      color='#737373'
+                      color='#04113E'
                       maxLength={100}
                       {...register('title')}
                     />
@@ -533,7 +533,7 @@ export function Sell() {
                     invalid={!!errors.description}
                     gridColumn={{ base: 'auto', md: 'span 2' }}
                   >
-                    <Field.Label>Mô tả chi tiết</Field.Label>
+                    <Field.Label color='#04113E'>Mô tả chi tiết</Field.Label>
                     <Textarea
                       placeholder='Chia sẻ chi tiết về tình trạng xe, lịch sử sử dụng và điểm nổi bật...'
                       bg='white'
@@ -542,7 +542,7 @@ export function Sell() {
                       px={4}
                       py={3}
                       fontSize='16px'
-                      color='#737373'
+                      color='#04113E'
                       minH='160px'
                       {...register('description')}
                     />
@@ -672,6 +672,7 @@ export function Sell() {
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Tình trạng'
                     collection={conditionCollection}
                     control={control}
@@ -681,7 +682,7 @@ export function Sell() {
 
                   {isUsedCar && (
                     <Field.Root invalid={!!errors.mileage}>
-                      <Field.Label>Số Km đã đi (*)</Field.Label>
+                      <Field.Label color='#04113E'>Số Km đã đi (*)</Field.Label>
                       <Input
                         placeholder='Nhập số km đã đi'
                         bg='white'
@@ -690,7 +691,7 @@ export function Sell() {
                         px={4}
                         py={3}
                         fontSize='16px'
-                        color='#737373'
+                        color='#04113E'
                         {...register('mileage')}
                       />
                       {errors.mileage && (
@@ -700,6 +701,7 @@ export function Sell() {
                   )}
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Xuất xứ'
                     collection={originCollection}
                     control={control}
@@ -708,7 +710,7 @@ export function Sell() {
                   />
 
                   <Field.Root invalid={!!errors.warranty}>
-                    <Field.Label>Chính sách bảo hành</Field.Label>
+                    <Field.Label color='#04113E'>Chính sách bảo hành</Field.Label>
                     <Input
                       placeholder='Nhập thông tin bảo hành'
                       bg='white'
@@ -717,7 +719,7 @@ export function Sell() {
                       px={4}
                       py={3}
                       fontSize='16px'
-                      color='#737373'
+                      color='#04113E'
                       {...register('warranty')}
                     />
                     {errors.warranty && (
@@ -738,6 +740,7 @@ export function Sell() {
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Hãng'
                     collection={brandCollection}
                     control={control}
@@ -746,6 +749,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Dòng xe'
                     collection={modelCollection}
                     control={control}
@@ -761,7 +765,7 @@ export function Sell() {
                   />
 
                   <Field.Root invalid={!!errors.year}>
-                    <Field.Label>Năm sản xuất</Field.Label>
+                    <Field.Label color='#04113E'>Năm sản xuất</Field.Label>
                     <Input
                       type='number'
                       placeholder='Ví dụ: 2022'
@@ -771,13 +775,14 @@ export function Sell() {
                       px={4}
                       py={3}
                       fontSize='16px'
-                      color='#737373'
+                      color='#04113E'
                       {...register('year')}
                     />
                     {errors.year && <Field.ErrorText>{errors.year.message}</Field.ErrorText>}
                   </Field.Root>
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Phiên bản xe'
                     collection={versionCollection}
                     control={control}
@@ -786,6 +791,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Hộp số'
                     collection={transmissionCollection}
                     control={control}
@@ -794,6 +800,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Nhiên liệu'
                     collection={fuelCollection}
                     control={control}
@@ -802,6 +809,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Kiểu dáng'
                     collection={bodyStyleCollection}
                     control={control}
@@ -810,6 +818,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Số chỗ'
                     collection={seatsCollection}
                     control={control}
@@ -818,6 +827,7 @@ export function Sell() {
                   />
 
                   <SelectFieldController
+                    labelColor='#04113E'
                     label='Màu sắc'
                     collection={colorCollection}
                     control={control}
@@ -834,7 +844,7 @@ export function Sell() {
                     {fields.map((field, index) => (
                       <HStack key={field.id} gap={3} align='flex-start'>
                         <Field.Root flex={1} invalid={!!errors.specs?.[index]?.name}>
-                          <Field.Label>Tên thông số</Field.Label>
+                          <Field.Label color='#04113E'>Tên thông số</Field.Label>
                           <Input
                             placeholder='Ví dụ: Chiều dài cơ sở'
                             bg='white'
@@ -843,7 +853,7 @@ export function Sell() {
                             px={4}
                             py={3}
                             fontSize='16px'
-                            color='#737373'
+                            color='#04113E'
                             {...register(`specs.${index}.name` as const)}
                           />
                           {errors.specs?.[index]?.name && (
@@ -851,7 +861,7 @@ export function Sell() {
                           )}
                         </Field.Root>
                         <Field.Root flex={1} invalid={!!errors.specs?.[index]?.value}>
-                          <Field.Label>Giá trị</Field.Label>
+                          <Field.Label color='#04113E'>Giá trị</Field.Label>
                           <Input
                             placeholder='Ví dụ: 2.960 mm'
                             bg='white'
@@ -860,7 +870,7 @@ export function Sell() {
                             px={4}
                             py={3}
                             fontSize='16px'
-                            color='#737373'
+                            color='#04113E'
                             {...register(`specs.${index}.value` as const)}
                           />
                           {errors.specs?.[index]?.value && (
@@ -892,6 +902,7 @@ export function Sell() {
                     fontSize='14px'
                     onClick={() => append({ name: '', value: '' })}
                     className='rounded-md px-5 py-3 font-semibold text-sm'
+                    _hover={{ bg: '#E5E5E5' }}
                   >
                     + Thêm thông số kỹ thuật
                   </Button>
@@ -909,7 +920,7 @@ export function Sell() {
                 </Text>
                 <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={5}>
                   <Field.Root invalid={!!errors.price}>
-                    <Field.Label>Giá mong muốn (VND)</Field.Label>
+                    <Field.Label color='#04113E'>Giá mong muốn (VND)</Field.Label>
                     <Controller
                       name='price'
                       control={control}
@@ -936,7 +947,7 @@ export function Sell() {
                             px={4}
                             py={3}
                             fontSize='16px'
-                            color='#737373'
+                            color='#04113E'
                             onBlur={field.onBlur}
                           />
                         </NumberInput.Root>

@@ -348,7 +348,7 @@ export function StoreRegistration() {
     return (
       <Box bg='#F8FAFC' minH='calc(100vh - 200px)' py={8}>
         <Box maxW='1200px' mx='auto' px={4}>
-          <Card.Root className='rounded-2xl border border-[#E5E5E5]'>
+          <Card.Root className='rounded-2xl border border-[#E5E5E5] !bg-white'>
             <Card.Body p={8}>
               <VStack align='center' gap={6} py={8}>
                 <Box color='#16a34a' display='flex' alignItems='center' justifyContent='center'>
@@ -386,7 +386,7 @@ export function StoreRegistration() {
   return (
     <Box bg='#F8FAFC' minH='calc(100vh - 200px)' py={8}>
       <Box maxW='1200px' mx='auto' px={4}>
-        <Card.Root className='rounded-2xl border border-[#E5E5E5]'>
+        <Card.Root className='rounded-2xl border border-[#E5E5E5] !bg-white'>
           <Card.Header>
             <VStack align='flex-start' gap={2}>
               <Text fontSize='xl' fontWeight='700' color='#04113E'>
@@ -401,13 +401,14 @@ export function StoreRegistration() {
             <form onSubmit={handleSubmit(onSubmit)}>
               <VStack align='stretch' gap={6}>
                 <Field.Root invalid={!!errors.storeName}>
-                  <Field.Label>Tên cửa hàng *</Field.Label>
+                  <Field.Label color='#04113E'>Tên cửa hàng *</Field.Label>
                   <Controller
                     control={control}
                     name='storeName'
                     render={({ field }) => (
                       <Input
                         placeholder='Nhập tên cửa hàng'
+                        color='#04113E'
                         bg='white'
                         borderColor='#E5E5E5'
                         borderRadius='8px'
@@ -422,7 +423,7 @@ export function StoreRegistration() {
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
                   <Field.Root invalid={!!errors.storeLogo}>
-                    <Field.Label>Logo cửa hàng *</Field.Label>
+                    <Field.Label color='#04113E'>Logo cửa hàng *</Field.Label>
                     <VStack align='stretch' gap={2}>
                       {watchedLogo && (
                         <Box
@@ -470,6 +471,7 @@ export function StoreRegistration() {
                             variant='outline'
                             size='sm'
                             onClick={e => e.stopPropagation()}
+                            color='#04113E'
                             loading={isUploadingLogo}
                             disabled={isUploadingLogo}
                           >
@@ -484,7 +486,7 @@ export function StoreRegistration() {
                   </Field.Root>
 
                   <Field.Root invalid={!!errors.storeBanner}>
-                    <Field.Label>Banner cửa hàng</Field.Label>
+                    <Field.Label color='#04113E'>Banner cửa hàng</Field.Label>
                     <VStack align='stretch' gap={2}>
                       {watchedBanner && (
                         <Box
@@ -534,6 +536,7 @@ export function StoreRegistration() {
                             onClick={e => e.stopPropagation()}
                             loading={isUploadingBanner}
                             disabled={isUploadingBanner}
+                            color='#04113E'
                           >
                             {watchedBanner ? 'Thay đổi banner' : 'Chọn file'}
                           </Button>
@@ -547,7 +550,7 @@ export function StoreRegistration() {
                 </Grid>
 
                 <Field.Root invalid={!!errors.description}>
-                  <Field.Label>Mô tả cửa hàng</Field.Label>
+                  <Field.Label color='#04113E'>Mô tả cửa hàng</Field.Label>
                   <Controller
                     control={control}
                     name='description'
@@ -556,6 +559,7 @@ export function StoreRegistration() {
                         placeholder='Nhập mô tả về cửa hàng của bạn'
                         bg='white'
                         borderColor='#E5E5E5'
+                        color='#04113E'
                         borderRadius='8px'
                         rows={4}
                         {...field}
@@ -569,13 +573,14 @@ export function StoreRegistration() {
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
                   <Field.Root invalid={!!errors.taxCode}>
-                    <Field.Label>Mã số thuế *</Field.Label>
+                    <Field.Label color='#04113E'>Mã số thuế *</Field.Label>
                     <Controller
                       control={control}
                       name='taxCode'
                       render={({ field }) => (
                         <Input
                           placeholder='Nhập mã số thuế'
+                          color='#04113E'
                           bg='white'
                           borderColor='#E5E5E5'
                           borderRadius='8px'
@@ -597,7 +602,7 @@ export function StoreRegistration() {
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
                   <Field.Root invalid={!!errors.storePhone}>
-                    <Field.Label>Số điện thoại *</Field.Label>
+                    <Field.Label color='#04113E'>Số điện thoại *</Field.Label>
                     <Controller
                       control={control}
                       name='storePhone'
@@ -607,6 +612,7 @@ export function StoreRegistration() {
                           bg='white'
                           borderColor='#E5E5E5'
                           borderRadius='8px'
+                          color='#04113E'
                           {...field}
                         />
                       )}
@@ -617,7 +623,7 @@ export function StoreRegistration() {
                   </Field.Root>
 
                   <Field.Root invalid={!!errors.email}>
-                    <Field.Label>Email *</Field.Label>
+                    <Field.Label color='#04113E'>Email *</Field.Label>
                     <Controller
                       control={control}
                       name='email'
@@ -628,6 +634,7 @@ export function StoreRegistration() {
                           bg='white'
                           borderColor='#E5E5E5'
                           borderRadius='8px'
+                          color='#04113E'
                           {...field}
                         />
                       )}
@@ -638,7 +645,7 @@ export function StoreRegistration() {
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
                   <Field.Root invalid={!!errors.zalo}>
-                    <Field.Label>Zalo</Field.Label>
+                    <Field.Label color='#04113E'>Zalo</Field.Label>
                     <Controller
                       control={control}
                       name='zalo'
@@ -647,6 +654,7 @@ export function StoreRegistration() {
                           placeholder='Nhập số Zalo'
                           bg='white'
                           borderColor='#E5E5E5'
+                          color='#04113E'
                           borderRadius='8px'
                           {...field}
                         />
@@ -656,7 +664,7 @@ export function StoreRegistration() {
                   </Field.Root>
 
                   <Field.Root invalid={!!errors.websiteLink}>
-                    <Field.Label>Website</Field.Label>
+                    <Field.Label color='#04113E'>Website</Field.Label>
                     <Controller
                       control={control}
                       name='websiteLink'
@@ -666,6 +674,7 @@ export function StoreRegistration() {
                           bg='white'
                           borderColor='#E5E5E5'
                           borderRadius='8px'
+                          color='#04113E'
                           {...field}
                         />
                       )}

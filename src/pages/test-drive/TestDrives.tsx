@@ -226,6 +226,7 @@ export function TestDrives() {
               <Box position='relative' flex='1' minW='200px'>
                 <Input
                   placeholder='Tìm kiếm theo tên khách hàng, SĐT, tên xe...'
+                  color='#04113E'
                   value={filters.q}
                   onChange={e => handleFilterChange('q', e.target.value)}
                   pl={9}
