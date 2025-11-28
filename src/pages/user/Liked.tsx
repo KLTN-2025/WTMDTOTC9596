@@ -49,7 +49,7 @@ type FavoriteItem = {
 }
 
 export function Liked() {
-  const { user } = useAuth()
+  const { user, store } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
   const [items, setItems] = useState<FavoriteItem[]>([])
@@ -334,7 +334,7 @@ export function Liked() {
                               fontSize='12px'
                               flex={1}
                             >
-                              📞 0933.******
+                              📞 {store?.contactPhone || 'N/A'}
                             </Button>
                             <Button
                               variant='outline'

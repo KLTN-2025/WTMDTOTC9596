@@ -63,7 +63,7 @@ type DetailItem = {
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, store } = useAuth()
   const toast = useToast()
   const [productData, setProductData] = useState({
     product: null as ProductDetailData | null,
@@ -73,7 +73,6 @@ export function ProductDetail() {
 
   const [uiState, setUiState] = useState({
     selectedImage: 0,
-    showPhone: false,
     isLoading: true
   })
 
@@ -334,21 +333,8 @@ export function ProductDetail() {
                       py={2}
                       fontSize='14px'
                       fontWeight='700'
-                      onClick={() => setUiState(prev => ({ ...prev, showPhone: !prev.showPhone }))}
                     >
-                      {uiState.showPhone ? 'SĐT liên hệ: 0933******' : 'SĐT liên hệ: 0933******'}
-                    </Button>
-                    <Button
-                      bg='#F4F4F4'
-                      color={uiState.showPhone ? '#306BD9' : '#737373'}
-                      borderRadius='99px'
-                      px={4}
-                      py={2}
-                      fontSize='14px'
-                      fontWeight='700'
-                      onClick={() => setUiState(prev => ({ ...prev, showPhone: !prev.showPhone }))}
-                    >
-                      {uiState.showPhone ? 'Ẩn số' : 'Hiện số'}
+                      SĐT liên hệ: {store?.contactPhone || 'N/A'}
                     </Button>
                   </HStack>
                 </VStack>
@@ -615,7 +601,7 @@ function ProductInfoCard({
   isLoggedIn: boolean
 }) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const { user } = useAuth()
+  const { user, store } = useAuth()
   const toast = useToast()
 
   const handleToggleFavorite = async () => {
@@ -792,7 +778,7 @@ function ProductInfoCard({
             <Icon size='md'>
               <HiOutlinePhone />
             </Icon>
-            0933.******
+            {store?.contactPhone || 'N/A'}
           </Button>
         </HStack>
 
