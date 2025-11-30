@@ -50,6 +50,7 @@ import { useToast } from '@/hooks/useToast'
 import { CurrencyFormat } from '@/components/ui/currency-format'
 import { getFirstImage } from '@/utils/media'
 import { buildProductsPath } from '@/utils/paths'
+import { ChatBox } from '@/components/common/ChatBox'
 
 const searchSchema = z.object({ q: z.string().trim().max(200).optional().or(z.literal('')) })
 
@@ -818,6 +819,9 @@ export function Home() {
           <AboutSection />
         </Box>
       </Container>
+
+      {/* Chat Box */}
+      <ChatBox />
     </Box>
   )
 }
