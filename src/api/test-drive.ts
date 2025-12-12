@@ -46,9 +46,12 @@ export const getTestDriveBookings = async (
     status?: string
     dateFrom?: string
     dateTo?: string
+    includeAll?: boolean
   }
 ) => {
-  if (!storeId) {
+  const shouldFetchAll = options?.includeAll === true
+
+  if (!storeId && !shouldFetchAll) {
     return { data: [], error: null, totalCount: 0 }
   }
 
@@ -67,7 +70,10 @@ export const getTestDriveBookings = async (
     `,
       { count: 'exact' }
     )
-    .eq('store_id', storeId)
+
+  if (!shouldFetchAll && storeId) {
+    query = query.eq('store_id', storeId)
+  }
 
   if (options?.search) {
     const searchTerm = `%${options.search}%`
@@ -181,9 +187,12 @@ export const getConfirmedCustomerContacts = async (
     pageSize?: number
     search?: string
     status?: typeof BOOKING_STATUS.CONFIRMED | typeof BOOKING_STATUS.COMPLETED | 'all'
+    includeAll?: boolean
   }
 ) => {
-  if (!storeId) {
+  const shouldFetchAll = options?.includeAll === true
+
+  if (!storeId && !shouldFetchAll) {
     return { data: [], error: null, totalCount: 0 }
   }
 
@@ -192,10 +201,11 @@ export const getConfirmedCustomerContacts = async (
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
-  let query = supabase
-    .from(TABLES.TEST_DRIVE_BOOKINGS)
-    .select('*', { count: 'exact' })
-    .eq('store_id', storeId)
+  let query = supabase.from(TABLES.TEST_DRIVE_BOOKINGS).select('*', { count: 'exact' })
+
+  if (!shouldFetchAll && storeId) {
+    query = query.eq('store_id', storeId)
+  }
 
   if (options?.status && options.status !== 'all') {
     query = query.eq('status', options.status)

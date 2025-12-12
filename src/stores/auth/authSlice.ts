@@ -93,6 +93,9 @@ const authSlice = createSlice({
       state.session = action.payload.session
       state.isAuthenticated = !!action.payload.session?.user
       state.isLoading = false
+      // Reset role-related data to avoid showing stale permissions between accounts
+      state.store = null
+      state.profile = null
     },
     clearAuth: state => {
       state.user = null

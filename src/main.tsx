@@ -13,7 +13,7 @@ import { LocaleProvider } from '@chakra-ui/react'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider store={store}>
-      <Provider>
+      <Provider defaultTheme='light' forcedTheme='light' enableSystem={false}>
         <LocaleProvider locale='vi-VN'>
           <AuthInitializer>
             <MasterDataInitializer>

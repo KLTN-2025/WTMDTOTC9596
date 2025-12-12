@@ -26,6 +26,7 @@ import { PaginationControls } from '@/components/common/PaginationControls'
 import { SelectField } from '@/components/common/SelectField'
 import { createMasterDataCollection } from '@/utils/collections'
 import { BOOKING_STATUS } from '@/configs/constants'
+import { usePermission } from '@/hooks/usePermission'
 
 const ITEMS_PER_PAGE = 10
 
@@ -39,6 +40,7 @@ export function CustomerContacts() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const { store } = useAuth()
+  const { isAdmin } = usePermission()
   const toast = useToast()
 
   const statusCollection = useMemo(
@@ -77,7 +79,10 @@ export function CustomerContacts() {
         data,
         error,
         totalCount: count
-      } = await getConfirmedCustomerContacts(store?.id || null, options)
+      } = await getConfirmedCustomerContacts(store?.id || null, {
+        ...options,
+        includeAll: isAdmin
+      })
 
       if (error) {
         toast.error(error.message || 'Không thể tải danh sách khách hàng', {
@@ -96,12 +101,12 @@ export function CustomerContacts() {
   }
 
   useEffect(() => {
-    if (store?.id) {
+    if (store?.id || isAdmin) {
       loadContacts()
     } else {
       setIsLoading(false)
     }
-  }, [currentPage, debouncedSearch, status, store?.id])
+  }, [currentPage, debouncedSearch, status, store?.id, isAdmin])
 
   if (isLoading && contacts.length === 0) {
     return (

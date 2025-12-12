@@ -7,6 +7,7 @@ import { formatTimeAgo } from '@/utils/date'
 import { PATHS } from '@/configs/paths'
 import { DEFAULT_VALUES } from '@/configs/constants'
 import { getFirstImage } from '@/utils/media'
+import { useAuth } from '@/hooks/useAuth'
 
 type ProductCardProps = {
   product: Product
@@ -20,6 +21,7 @@ export function ProductCard({
   showSoldBadge = false
 }: ProductCardProps) {
   const navigate = useNavigate()
+  const { store } = useAuth()
   const firstImage = getFirstImage(product.mediaUrls)
 
   return (
@@ -202,7 +204,7 @@ export function ProductCard({
                   flex={1}
                   _hover={{ bg: '#E5E5E5' }}
                 >
-                  📞 0933.******
+                  📞 {store?.contactPhone || 'N/A'}
                 </Button>
                 <Button
                   variant='outline'

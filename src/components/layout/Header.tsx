@@ -126,7 +126,10 @@ export function Header() {
                   <Portal>
                     <Menu.Positioner>
                       <Menu.Content minW='200px'>
-                        <ProtectedComponent roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}>
+                        <ProtectedComponent
+                          roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}
+                          showWhileLoading
+                        >
                           <Menu.Item
                             value='manage-listings'
                             onClick={() => navigate(PATHS.USER.MANAGE_LISTINGS)}
@@ -137,7 +140,7 @@ export function Header() {
                             Quản lý tin
                           </Menu.Item>
                         </ProtectedComponent>
-                        <ProtectedComponent roles={[USER_ROLE.SELLER, USER_ROLE.ADMIN]}>
+                        <ProtectedComponent roles={[USER_ROLE.ADMIN]}>
                           <Menu.Item
                             value='test-drives'
                             onClick={() => navigate(PATHS.TEST_DRIVES)}
@@ -159,7 +162,7 @@ export function Header() {
                             Danh sách khách hàng
                           </Menu.Item>
                         </ProtectedComponent>
-                        <ProtectedComponent roles={[USER_ROLE.ADMIN]}>
+                        <ProtectedComponent roles={[USER_ROLE.ADMIN]} showWhileLoading>
                           <Menu.Item value='admin' onClick={() => navigate(PATHS.ADMIN.ROOT)}>
                             <Icon>
                               <FiShield />

@@ -32,6 +32,7 @@ import { PaginationControls } from '@/components/common/PaginationControls'
 import { SelectField } from '@/components/common/SelectField'
 import { createMasterDataCollection } from '@/utils/collections'
 import { BOOKING_STATUS } from '@/configs/constants'
+import { usePermission } from '@/hooks/usePermission'
 
 type FilterState = {
   q: string
@@ -52,6 +53,7 @@ export function TestDrives() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const { user, store } = useAuth()
+  const { isAdmin } = usePermission()
   const toast = useToast()
 
   const statusCollection = useMemo(
@@ -106,7 +108,10 @@ export function TestDrives() {
         data,
         error,
         totalCount: count
-      } = await getTestDriveBookings(store?.id || null, options)
+      } = await getTestDriveBookings(store?.id || null, {
+        ...options,
+        includeAll: isAdmin
+      })
 
       if (error) {
         toast.error(error.message || 'Không thể tải danh sách lịch hẹn')
@@ -132,12 +137,12 @@ export function TestDrives() {
   }
 
   useEffect(() => {
-    if (store?.id) {
+    if (store?.id || isAdmin) {
       loadBookings()
     } else {
       setIsLoading(false)
     }
-  }, [currentPage, debouncedSearch, filters.status, filters.dateRange, store?.id])
+  }, [currentPage, debouncedSearch, filters.status, filters.dateRange, store?.id, isAdmin])
 
   const handleCancel = async (bookingId: string) => {
     try {

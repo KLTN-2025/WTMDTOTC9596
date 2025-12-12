@@ -72,7 +72,7 @@ const routes: RouteObject[] = [
         path: 'test-drives',
         element: createGuardedRoute(
           <TestDrives />,
-          routeGuards.role([USER_ROLE.SELLER, USER_ROLE.ADMIN])
+          routeGuards.role([USER_ROLE.ADMIN])
         )
       },
       {
